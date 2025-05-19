@@ -14,7 +14,7 @@ TARGET := $(BIN_DIR)/gps_resolver
 SRCS := $(wildcard $(SRC_DIR)/*.c)
 OBJS := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
- Compiler
+# Compiler
 CC := gcc
 CFLAGS_COMMON := -Wall -Wextra -Werror -pedantic -std=c11 -Wshadow -Wconversion -Wunused-parameter -I$(INC_DIR)
 
