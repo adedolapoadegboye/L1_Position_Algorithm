@@ -25,6 +25,13 @@
 void app_menu(void)
 {
     int rtcm_input_source = 0;
+    // Initialize the application
+    printf("GNSS Positioning Application Starting...\n");
+
+    // Set up any necessary configurations or initializations here
+
+    // Display the application menu
+    printf("Initializing application menu...\n");
 
     printf("Welcome to the GNSS Positioning Application!\n");
     printf("Note: Only GPS L1 is supported for now\n");
@@ -49,7 +56,8 @@ void app_menu(void)
             // Add code to handle file input
             break;
         case 3:
-            printf("Exiting the application.\n");
+            // Clean up and exit
+            printf("Application exiting...\n");
             return;
         default:
             printf("Invalid choice. Please try again.\n");
