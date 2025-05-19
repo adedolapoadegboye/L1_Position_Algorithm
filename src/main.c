@@ -1,4 +1,4 @@
-#include "algo.h"
+#include "../include/algo.h"
 
 int main()
 {
