@@ -19,3 +19,5 @@
 #include <sys/types.h> /**< System data types (pid_t, size_t, etc.) */
 
 #endif /* ALGO */
+
+void app_menu(void);
