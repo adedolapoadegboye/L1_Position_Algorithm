@@ -40,3 +40,4 @@ HANDLE serial_connect_windows(char *selected_port, size_t size);
 #else
 int serial_connect_mac(char *selected_port, size_t size);
 #endif
+void *serial_connect(char *selected_port, size_t size);

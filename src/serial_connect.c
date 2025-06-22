@@ -1,12 +1,13 @@
 /**
  * @file serial_connect.c
- * @brief Lists available USB serial connections and connects to selected port.
+ * @brief Lists available USB serial connections and connects to selected port using the defined port properties.
  */
 
 #include "../include/algo.h"
 
 #ifdef _WIN32
 #include <windows.h>
+#include <stdio.h>
 
 /**
  * @brief List and connect to available COM ports on Windows.
@@ -30,6 +31,8 @@ HANDLE serial_connect_windows(char *selected_port, size_t size)
         size_check = QueryDosDeviceA(name, target, sizeof(target));
         if (size_check > 0)
         {
+            if (count >= sizeof(ports) / sizeof(ports[0]))
+                break;
             snprintf(ports[count++], sizeof(ports[0]), "%s", name);
             printf("  [%d] %s\n", count, name);
         }
@@ -37,15 +40,15 @@ HANDLE serial_connect_windows(char *selected_port, size_t size)
 
     if (count == 0)
     {
-        printf("No serial ports found.\n");
+        printf("No serial ports found on windows.\n");
         return INVALID_HANDLE_VALUE;
     }
 
     int choice;
+    char input[16];
     printf("Select a port by number (1-%d): ", count);
-    scanf("%d", &choice);
-
-    if (choice < 1 || choice > count)
+    fgets(input, sizeof(input), stdin);
+    if (sscanf(input, "%d", &choice) != 1 || choice < 1 || choice > count)
     {
         printf("Invalid selection.\n");
         return INVALID_HANDLE_VALUE;
@@ -59,7 +62,8 @@ HANDLE serial_connect_windows(char *selected_port, size_t size)
 
     if (hSerial == INVALID_HANDLE_VALUE)
     {
-        perror("Failed to open serial port");
+        DWORD err = GetLastError();
+        printf("Failed to open serial port (Error %lu)\n", err);
     }
     else
     {
@@ -74,6 +78,9 @@ HANDLE serial_connect_windows(char *selected_port, size_t size)
 #include <fnmatch.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 /**
  * @brief List and connect to USB serial ports on macOS/Linux.
@@ -84,7 +91,7 @@ HANDLE serial_connect_windows(char *selected_port, size_t size)
 int serial_connect_mac(char *selected_port, size_t size)
 {
     char ports[64][256];
-    int count = 0;
+    size_t count = 0;
 
     DIR *dp = opendir("/dev");
     struct dirent *entry;
@@ -102,8 +109,10 @@ int serial_connect_mac(char *selected_port, size_t size)
         if (fnmatch("tty.usb*", entry->d_name, 0) == 0 ||
             fnmatch("ttyUSB*", entry->d_name, 0) == 0)
         {
+            if (count >= sizeof(ports) / sizeof(ports[0]))
+                break;
             snprintf(ports[count++], sizeof(ports[0]), "/dev/%s", entry->d_name);
-            printf("  [%d] /dev/%s\n", count, entry->d_name);
+            printf("  [%zu] /dev/%s\n", count, entry->d_name);
         }
     }
 
@@ -111,15 +120,15 @@ int serial_connect_mac(char *selected_port, size_t size)
 
     if (count == 0)
     {
-        printf("No serial ports found.\n");
+        printf("No serial ports found on mac.\n");
         return -1;
     }
 
     int choice;
-    printf("Select a port by number (1-%d): ", count);
-    scanf("%d", &choice);
-
-    if (choice < 1 || choice > count)
+    char input[16];
+    printf("Select a port by number (1-%zu): ", count);
+    fgets(input, sizeof(input), stdin);
+    if (sscanf(input, "%d", &choice) != 1 || choice < 1 || choice > (int)count)
     {
         printf("Invalid selection.\n");
         return -1;
@@ -134,7 +143,6 @@ int serial_connect_mac(char *selected_port, size_t size)
         return -1;
     }
 
-    // Optional: Set serial config (baudrate, etc.)
     struct termios tty;
     if (tcgetattr(fd, &tty) != 0)
     {
@@ -145,10 +153,46 @@ int serial_connect_mac(char *selected_port, size_t size)
 
     cfsetospeed(&tty, B9600);
     cfsetispeed(&tty, B9600);
+
+    tty.c_cflag &= (tcflag_t)(~CSIZE);
+    tty.c_cflag |= CS8;
+    tty.c_cflag &= (tcflag_t)(~PARENB);
+    tty.c_cflag &= (tcflag_t)(~CSTOPB);
+    tty.c_cflag &= (tcflag_t)(~CRTSCTS);
+
     tty.c_cflag |= (CLOCAL | CREAD);
-    tcsetattr(fd, TCSANOW, &tty);
+
+    tty.c_lflag = 0;
+    tty.c_oflag = 0;
+    tty.c_iflag = 0;
+
+    tty.c_cc[VMIN] = 1;
+    tty.c_cc[VTIME] = 1;
+
+    if (tcsetattr(fd, TCSANOW, &tty) != 0)
+    {
+        perror("tcsetattr failed");
+        close(fd);
+        return -1;
+    }
 
     printf("Connected to %s\n", selected_port);
     return fd;
 }
 #endif
+
+/**
+ * @brief Connect to a serial port based on the operating system.
+ * @param selected_port Buffer to store the selected port name or path.
+ * @param size Size of the selected_port buffer.
+ * @return Handle or file descriptor for the opened serial port, or NULL on failure.
+ */
+void *serial_connect(char *selected_port, size_t size)
+{
+#ifdef _WIN32
+    return (void *)serial_connect_windows(selected_port, size);
+#else
+    int fd = serial_connect_mac(selected_port, size);
+    return (fd != -1) ? (void *)(intptr_t)fd : NULL;
+#endif
+}

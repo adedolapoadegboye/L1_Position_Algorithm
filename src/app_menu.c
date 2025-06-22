@@ -30,7 +30,7 @@ void app_menu(void)
     printf("*         GNSS Positioning Engine     *\n");
     printf("********************************************\n\n" COLOR_RESET);
 
-    printf(COLOR_YELLOW "Note: Only GPS L1 and RTCM input are supported at this time.\n\n" COLOR_RESET);
+    printf(COLOR_YELLOW "Note: Only GPS L1 signals and RTCM input at 1Hz are supported at this time.\n\n" COLOR_RESET);
 
     printf(COLOR_GREEN "********** RTCM Input Source Menu **********\n");
     printf("* 1. Serial Port                           *\n");
@@ -46,11 +46,12 @@ void app_menu(void)
         switch (rtcm_input_source)
         {
         case 1:
-            printf(COLOR_GREEN "You selected Serial Port.\n" COLOR_RESET);
+            printf(COLOR_GREEN "You selected Serial Port Input.\n" COLOR_RESET);
             // Call the serial connection function
+            serial_connect(NULL, 0); // Pass NULL and 0 for now, to be implemented
             break;
         case 2:
-            printf(COLOR_GREEN "You selected File.\n" COLOR_RESET);
+            printf(COLOR_GREEN "You selected File Input.\n" COLOR_RESET);
             // Add code to handle file input
             break;
         case 3:
