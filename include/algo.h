@@ -20,4 +20,23 @@
 
 #endif /* ALGO */
 
+/* ANSI color codes for styling */
+#define COLOR_RESET "\033[0m"
+#define COLOR_GREEN "\033[1;32m"
+#define COLOR_YELLOW "\033[1;33m"
+#define COLOR_BLUE "\033[1;34m"
+#define COLOR_RED "\033[1;31m"
+
+/* App Menu */
 void app_menu(void);
+
+/* App Cleanup */
+void app_cleanup(void);
+
+/* Option 1: Serial connection */
+#ifdef _WIN32
+#include <windows.h>
+HANDLE serial_connect_windows(char *selected_port, size_t size);
+#else
+int serial_connect_mac(char *selected_port, size_t size);
+#endif
