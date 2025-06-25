@@ -17,6 +17,7 @@
 #include <time.h>      /**< Time and date functions */
 #include <unistd.h>    /**< POSIX API (read, write, close, etc.) */
 #include <sys/types.h> /**< System data types (pid_t, size_t, etc.) */
+#include <errno.h>     /**< Error number definitions */
 
 #endif /* ALGO */
 
@@ -41,3 +42,7 @@ HANDLE serial_connect_windows(char *selected_port, size_t size);
 int serial_connect_mac(char *selected_port, size_t size);
 #endif
 void *serial_connect(char *selected_port, size_t size);
+
+/* Option 2: File connection */
+FILE *file_connect();
+int file_input_mode(void);

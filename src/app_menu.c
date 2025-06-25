@@ -53,6 +53,7 @@ void app_menu(void)
         case 2:
             printf(COLOR_GREEN "You selected File Input.\n" COLOR_RESET);
             // Add code to handle file input
+            file_input_mode(); // Call the file connection function
             break;
         case 3:
             printf(COLOR_RED "Exiting the application...\n" COLOR_RESET);
