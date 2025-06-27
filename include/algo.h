@@ -44,5 +44,41 @@ int serial_connect_mac(char *selected_port, size_t size);
 void *serial_connect(char *selected_port, size_t size);
 
 /* Option 2: File connection */
-FILE *file_connect();
+FILE *file_connect(void);
 int file_input_mode(void);
+
+/* RTCM MSM4 parsing and position solving */
+typedef struct
+{
+    unsigned char *buffer;
+    size_t length;
+} RTCM_Message;
+
+typedef struct
+{
+    int sat_count;
+    double epoch_time;
+    struct
+    {
+        int sat_id;
+        double pseudorange;
+        double carrier_phase;
+        double doppler;
+        double snr;
+    } sats[16];
+} GNSS_ObservationSet;
+
+typedef struct
+{
+    double x, y, z;
+} ECEF_Coordinate;
+
+typedef struct
+{
+    double lat_deg, lon_deg, alt_m;
+} Geodetic_Coordinate;
+
+int read_next_rtcm_message(FILE *fp, RTCM_Message *message);
+int parse_msm4_message(RTCM_Message *message, GNSS_ObservationSet *obs);
+int calculate_position_least_squares(GNSS_ObservationSet *obs, ECEF_Coordinate *receiver_ecef);
+void ecef_to_geodetic(const ECEF_Coordinate *ecef, Geodetic_Coordinate *geo);

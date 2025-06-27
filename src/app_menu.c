@@ -43,6 +43,11 @@ void app_menu(void)
         printf(COLOR_BLUE "\nEnter your choice (1-3): " COLOR_RESET);
         scanf("%d", &rtcm_input_source);
 
+        // Flush remaining input on the line
+        int ch;
+        while ((ch = getchar()) != '\n' && ch != EOF)
+            ;
+
         switch (rtcm_input_source)
         {
         case 1:
