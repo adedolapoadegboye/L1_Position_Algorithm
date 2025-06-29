@@ -12,6 +12,7 @@
  */
 
 #include "../include/algo.h"
+#include "../include/rtcm_reader.h"
 
 int read_next_rtcm_message(FILE *fp, RTCM_Message *message)
 {

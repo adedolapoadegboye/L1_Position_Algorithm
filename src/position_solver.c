@@ -12,6 +12,7 @@
  */
 
 #include "../include/algo.h"
+#include "../include/position_solver.h"
 
 int calculate_position_least_squares(GNSS_ObservationSet *obs, ECEF_Coordinate *receiver_ecef)
 {

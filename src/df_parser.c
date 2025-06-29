@@ -12,6 +12,7 @@
  */
 
 #include "../include/algo.h"
+#include "../include/df_parser.h"
 
 int parse_msm4_message(RTCM_Message *message, GNSS_ObservationSet *obs)
 {

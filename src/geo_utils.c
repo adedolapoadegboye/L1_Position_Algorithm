@@ -12,6 +12,7 @@
  */
 
 #include "../include/algo.h"
+#include "../include/geo_utils.h"
 
 void ecef_to_geodetic(const ECEF_Coordinate *ecef, Geodetic_Coordinate *geo)
 {
