@@ -30,17 +30,18 @@ void app_menu(void)
     printf("*         GNSS Positioning Engine     *\n");
     printf("********************************************\n\n" COLOR_RESET);
 
-    printf(COLOR_YELLOW "Note: Only GPS L1 signals and RTCM input at 1Hz are supported at this time.\n\n" COLOR_RESET);
+    printf(COLOR_YELLOW "Note: Only GPS L1 signals and RTCM input are supported at this time.\n\n" COLOR_RESET);
 
     printf(COLOR_GREEN "********** RTCM Input Source Menu **********\n");
-    printf("* 1. Serial Port                           *\n");
-    printf("* 2. File                                  *\n");
-    printf("* 3. Exit                                  *\n");
+    printf("* 1. Serial Port  (Raw Binary)             *\n");
+    printf("* 2. Pre-recorded File (Raw Binary)        *\n");
+    printf("* 3. Pre-recorded File (Parsed with PyRTCM)*\n");
+    printf("* 4. Exit                                  *\n");
     printf("********************************************\n" COLOR_RESET);
 
     while (true)
     {
-        printf(COLOR_BLUE "\nEnter your choice (1-3): " COLOR_RESET);
+        printf(COLOR_BLUE "\nEnter your choice (1-4): " COLOR_RESET);
         scanf("%d", &rtcm_input_source);
 
         // Flush remaining input on the line
@@ -51,16 +52,19 @@ void app_menu(void)
         switch (rtcm_input_source)
         {
         case 1:
-            printf(COLOR_GREEN "You selected Serial Port Input.\n" COLOR_RESET);
+            printf(COLOR_GREEN "You selected Serial Port Input (Raw binary message).\n" COLOR_RESET);
             // Call the serial connection function
             serial_connect(NULL, 0); // Pass NULL and 0 for now, to be implemented
             break;
         case 2:
-            printf(COLOR_GREEN "You selected File Input.\n" COLOR_RESET);
-            // Add code to handle file input
-            file_input_mode(); // Call the file connection function
+            printf(COLOR_GREEN "You selected Pre-recorded File Input (Raw Binary).\n" COLOR_RESET);
+            file_input_mode(false); // Call the file selection function with raw binary
             break;
         case 3:
+            printf(COLOR_GREEN "You selected Pre-recorded File Input (Parsed with PyRTCM).\n" COLOR_RESET);
+            file_input_mode(true); // Call the file selection function with parsed data
+            break;
+        case 4:
             printf(COLOR_RED "Exiting the application...\n" COLOR_RESET);
             return;
         default:

@@ -5,12 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct
-{
-    unsigned char *buffer;
-    size_t length;
-} RTCM_Message;
-
-int read_next_rtcm_message(FILE *fp, RTCM_Message *message);
+int read_next_rtcm_message(FILE *fp);
 
 #endif // RTCM_READER_H

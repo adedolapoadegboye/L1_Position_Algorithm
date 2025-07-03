@@ -6,13 +6,13 @@
 #include "../include/algo.h"
 
 /// Default file path used when user provides no input
-#define DEFAULT_FILE_PATH "example/log.txt"
+#define DEFAULT_FILE_PATH "example/parsed_log.txt"
 
 /// Max number of retry attempts for file input
 #define MAX_RETRIES 3
 
 /**
- * @brief Opens a pre-parsed RTCM log file in text format for reading.
+ * @brief Opens and read RTCM log file in text format for reading.
  *
  * Prompts the user to enter the path to a human-readable RTCM log file.
  * If the user enters nothing, the function uses a default path.
@@ -20,7 +20,7 @@
  *
  * @return FILE* Pointer to the opened file, or NULL on failure.
  */
-FILE *file_connect(void)
+FILE *file_connect(bool is_parsed)
 {
     char file_path[256];
     FILE *fp = NULL;
@@ -49,8 +49,19 @@ FILE *file_connect(void)
             snprintf(file_path, sizeof(file_path), "%s", DEFAULT_FILE_PATH);
         }
 
-        // Try to open in text mode
-        fp = fopen(file_path, "r");
+        // Try to open in text or binary mode
+        if (is_parsed)
+        {
+            // Open as text file for parsed RTCM logs
+            fp = fopen(file_path, "r");
+        }
+        else
+        {
+            // Open as binary file for raw RTCM logs
+            fp = fopen(file_path, "rb");
+            // Todo: Add further parsing logic here to handle raw RTCM data
+        }
+
         if (fp != NULL)
         {
             printf(COLOR_GREEN "Successfully opened file: %s\n" COLOR_RESET, file_path);

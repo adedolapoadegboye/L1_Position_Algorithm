@@ -1,31 +1,84 @@
 /**
- * @file file_input_mode.c
- * @brief Handles RTCM MSM4 file input, step-by-step parsing and position resolution.
+ * @file rtcm_reader.c
+ * @brief Reads RTCM messages from a text-formatted file and dispatches parsing for known message types.
  *
- * This function is triggered when the user selects "File Input" from the application menu.
- * It opens a pre-recorded RTCM binary file, reads each epoch's MSM4 message, extracts relevant
- * GNSS observations, and calculates the receiver position using the least squares method.
- * The resulting position is printed in geodetic coordinates (decimal degrees).
+ * This function handles the input of RTCM messages in text format (one per line), as exported from logs or
+ * test files. It identifies supported message types (currently 1019 and 1074), and calls the appropriate
+ * parser function to extract useful GNSS data structures for later processing.
  *
- * All major steps (reading, parsing, solving) are delegated to their respective modules
- * to maintain modularity and educational clarity.
+ * Unsupported or malformed lines are safely skipped. Ephemeris and MSM4 messages are handled separately.
  */
 
 #include "../include/algo.h"
 #include "../include/rtcm_reader.h"
+#include "../include/df_parser.h"
 
-int read_next_rtcm_message(FILE *fp, RTCM_Message *message)
+/**
+ * @brief Reads the next valid RTCM message line from file and parses it if supported.
+ *
+ * Currently supports:
+ * - RTCM 1019: Ephemeris (GPS)
+ * - RTCM 1074: MSM4 (GPS L1 pseudorange and phase)
+ *
+ * Lines not matching these types are skipped. Each line should contain a complete message.
+ *
+ * @param fp Pointer to an open file for reading RTCM text lines.
+ * @return 0 on successful read and parse, non-zero otherwise.
+ */
+int read_next_rtcm_message(FILE *fp)
 {
-    static unsigned char buffer[1024]; // Assume message won't exceed 1024 bytes
+    char line[4096]; // Buffer for reading lines
 
-    // Try to read a single line or fixed-size message (simulate for now)
-    size_t bytes_read = fread(buffer, 1, 512, fp); // For simulation only
-    if (bytes_read == 0)
+    while (fgets(line, sizeof(line), fp) != NULL)
     {
-        return 1; // EOF or error
+        // Skip empty lines or comments
+        if (line[0] == '\n' || line[0] == '#' || line[0] == '\0' || line[0] == ' ' || line[0] == '\t')
+        {
+            continue;
+        }
+
+        // Debug print
+        printf(COLOR_GREEN "Processing Epoch: %s" COLOR_RESET, line);
+
+        // Extract DF002 = message type
+        char *df002_ptr = strstr(line, "DF002=");
+        if (!df002_ptr)
+        {
+            fprintf(stderr, COLOR_YELLOW "Warning: DF002 not found in message. Skipping.\n" COLOR_RESET);
+            continue;
+        }
+
+        int message_type = atoi(df002_ptr + 6);
+
+        if (message_type != 1019 && message_type != 1074)
+        {
+            fprintf(stderr, COLOR_YELLOW "Warning: Unsupported message type %d. Skipping.\n" COLOR_RESET, message_type);
+            continue;
+        }
+
+        if (message_type == 1019)
+        {
+            rtcm_1019_ephemeris_t eph = {0};
+            if (parse_rtcm_1019(line, &eph) != 0)
+            {
+                fprintf(stderr, COLOR_YELLOW "Warning: Failed to parse RTCM 1019 message. Skipping.\n" COLOR_RESET);
+                continue;
+            }
+            // TODO: Store or use ephemeris as needed
+        }
+        else if (message_type == 1074)
+        {
+            rtcm_1074_msm4_t msm4 = {0};
+            if (parse_rtcm_1074(line, &msm4) != 0)
+            {
+                fprintf(stderr, COLOR_YELLOW "Warning: Failed to parse RTCM 1074 message. Skipping.\n" COLOR_RESET);
+                continue;
+            }
+            // TODO: Store or use observation data as needed
+        }
+
+        return 0; // Successfully read and processed a supported message
     }
 
-    message->buffer = buffer;
-    message->length = bytes_read;
-    return 0;
+    return 1; // End of file or no valid message found
 }

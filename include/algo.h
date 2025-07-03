@@ -44,5 +44,5 @@ int serial_connect_mac(char *selected_port, size_t size);
 void *serial_connect(char *selected_port, size_t size);
 
 /* Option 2: File connection */
-FILE *file_connect(void);
-int file_input_mode(void);
+FILE *file_connect(bool is_parsed);
+int file_input_mode(bool is_parsed);
