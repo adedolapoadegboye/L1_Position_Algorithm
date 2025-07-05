@@ -14,16 +14,7 @@
 #include "../include/algo.h"
 #include "../include/position_solver.h"
 
-int calculate_position_least_squares(GNSS_ObservationSet *obs, ECEF_Coordinate *receiver_ecef)
+int calculate_position_least_squares(void)
 {
-    if (obs->sat_count < 4)
-    {
-        return 1; // Not enough satellites for 3D fix
-    }
-
-    // Very basic placeholder: return hardcoded position
-    receiver_ecef->x = 1113131.0;
-    receiver_ecef->y = -4848484.0;
-    receiver_ecef->z = 3987654.0;
     return 0;
 }

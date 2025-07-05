@@ -27,7 +27,8 @@
  */
 int read_next_rtcm_message(FILE *fp)
 {
-    char line[4096]; // Buffer for reading lines
+    char line[4096];              // Buffer for reading lines
+    unsigned int epoch_count = 0; // Counter for epochs processed
 
     while (fgets(line, sizeof(line), fp) != NULL)
     {
@@ -38,7 +39,7 @@ int read_next_rtcm_message(FILE *fp)
         }
 
         // Debug print
-        printf(COLOR_GREEN "Processing Epoch: %s" COLOR_RESET, line);
+        printf(COLOR_GREEN "Processing Epoch: %d" COLOR_RESET, epoch_count++);
 
         // Extract DF002 = message type
         char *df002_ptr = strstr(line, "DF002=");
@@ -77,7 +78,7 @@ int read_next_rtcm_message(FILE *fp)
             // TODO: Store or use observation data as needed
         }
 
-        return 0; // Successfully read and processed a supported message
+        continue; // Successfully read and processed a supported message
     }
 
     return 1; // End of file or no valid message found

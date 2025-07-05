@@ -1,8 +1,6 @@
 #ifndef DF_PARSER_H
 #define DF_PARSER_H
 
-#include "rtcm_reader.h"
-
 /// Maximum number of GPS satellites (PRNs 1–32)
 #define MAX_SAT 32
 
@@ -11,6 +9,25 @@
 
 /// Maximum number of signal-satellite combinations (cells)
 #define MAX_CELL 64
+
+/**
+ * @brief Utility macro to extract a field from a line by DF label.
+ *
+ * This macro simplifies repeated code where a specific DFxxx field value
+ * needs to be parsed from a text-formatted RTCM message. It uses `strstr()`
+ * to locate the field, and `sscanf()` to extract its value.
+ *
+ * @param field  The DF field label as a string (e.g., "DF009")
+ * @param format The sscanf-compatible format string (e.g., "%lf")
+ * @param target A pointer to the variable where the value should be stored
+ */
+#define EXTRACT(field, format, target)                       \
+    do                                                       \
+    {                                                        \
+        const char *ptr = strstr(line, field "=");           \
+        if (ptr)                                             \
+            sscanf(ptr + strlen(field) + 1, format, target); \
+    } while (0)
 
 /**
  * @brief Data structure for RTCM 1019 (GPS Ephemeris) message.
@@ -106,5 +123,23 @@ int parse_rtcm_1019(const char *line, rtcm_1019_ephemeris_t *eph);
  * @return 0 on success, non-zero on failure.
  */
 int parse_rtcm_1074(const char *line, rtcm_1074_msm4_t *msm4);
+/**
+ * @brief Prints the contents of a parsed RTCM 1074 MSM4 observation structure.
+ *
+ * This function outputs the observation data in a human-readable format,
+ * useful for debugging and verification purposes.
+ *
+ * @param msm4 Pointer to the MSM4 observation structure to print.
+ */
+void print_msm4(const rtcm_1074_msm4_t *msm4);
 
+/**
+ * @brief Prints the contents of a parsed RTCM 1019 ephemeris structure.
+ *
+ * This function outputs the ephemeris data in a human-readable format,
+ * useful for debugging and verification purposes.
+ *
+ * @param eph Pointer to the ephemeris structure to print.
+ */
+void print_ephemeris(const rtcm_1019_ephemeris_t *eph);
 #endif // DF_PARSER_H

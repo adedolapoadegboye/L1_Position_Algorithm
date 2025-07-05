@@ -32,19 +32,38 @@ int parse_rtcm_1019(const char *line, rtcm_1019_ephemeris_t *eph)
     if (!line || !eph)
         return -1;
 
-    memset(eph, 0, sizeof(*eph));
+    EXTRACT("DF009", "%hhu", &eph->satellite_id);
+    EXTRACT("DF076", "%hhu", &eph->iode);
+    EXTRACT("DF077", "%hhu", &eph->ura_index);
+    EXTRACT("DF078", "%hhu", &eph->sv_health);
+    EXTRACT("DF079", "%lf", &eph->tgd);
+    EXTRACT("DF071", "%hhu", &eph->iodc);
+    EXTRACT("DF081", "%u", &eph->toc);
+    EXTRACT("DF082", "%lf", &eph->af2);
+    EXTRACT("DF083", "%lf", &eph->af1);
+    EXTRACT("DF084", "%lf", &eph->af0);
+    EXTRACT("DF085", "%hu", &eph->week_number);
+    EXTRACT("DF086", "%lf", &eph->crs);
+    EXTRACT("DF087", "%lf", &eph->delta_n);
+    EXTRACT("DF088", "%lf", &eph->m0);
+    EXTRACT("DF089", "%lf", &eph->cuc);
+    EXTRACT("DF090", "%lf", &eph->eccentricity);
+    EXTRACT("DF091", "%lf", &eph->cus);
+    EXTRACT("DF092", "%lf", &eph->sqrt_a);
+    EXTRACT("DF093", "%u", &eph->toe);
+    EXTRACT("DF094", "%lf", &eph->cic);
+    EXTRACT("DF095", "%lf", &eph->omega0);
+    EXTRACT("DF096", "%lf", &eph->cis);
+    EXTRACT("DF097", "%lf", &eph->i0);
+    EXTRACT("DF098", "%lf", &eph->crc);
+    EXTRACT("DF099", "%lf", &eph->omega);
+    EXTRACT("DF100", "%lf", &eph->omega_dot);
+    EXTRACT("DF101", "%lf", &eph->idot);
+    EXTRACT("DF102", "%hhu", &eph->fit_interval);
+    EXTRACT("DF103", "%hhu", &eph->spare);
+    EXTRACT("DF137", "%hu", &eph->gps_wn);
 
-    sscanf(line,
-           "<RTCM(1019, DF002=1019, DF009=%hhu, DF076=%hhu, DF077=%hhu, DF078=%hhu, DF079=%lf, "
-           "DF071=%hhu, DF081=%u, DF082=%lf, DF083=%lf, DF084=%lf, DF085=%hu, DF086=%lf, "
-           "DF087=%lf, DF088=%lf, DF089=%lf, DF090=%lf, DF091=%lf, DF092=%lf, DF093=%u, "
-           "DF094=%lf, DF095=%lf, DF096=%lf, DF097=%lf, DF098=%lf, DF099=%lf, DF100=%lf, "
-           "DF101=%lf, DF102=%hhu, DF103=%hhu, DF137=%hu)",
-           &eph->satellite_id, &eph->iode, &eph->ura_index, &eph->sv_health, &eph->tgd,
-           &eph->iodc, &eph->toc, &eph->af2, &eph->af1, &eph->af0, &eph->week_number, &eph->crs,
-           &eph->delta_n, &eph->m0, &eph->cuc, &eph->eccentricity, &eph->cus, &eph->sqrt_a,
-           &eph->toe, &eph->cic, &eph->omega0, &eph->cis, &eph->i0, &eph->crc, &eph->omega,
-           &eph->omega_dot, &eph->idot, &eph->fit_interval, &eph->spare, &eph->gps_wn);
+    print_ephemeris(eph); // quick debug print
 
     return 0;
 }
@@ -64,63 +83,62 @@ int parse_rtcm_1074(const char *line, rtcm_1074_msm4_t *msm4)
     if (!line || !msm4)
         return -1;
 
-    memset(msm4, 0, sizeof(*msm4));
+    // Step 1: Extract MSM4 header fields using the EXTRACT macro
+    EXTRACT("DF003", "%hu", &msm4->station_id);
+    EXTRACT("DF004", "%u", &msm4->epoch_time);
+    EXTRACT("DF393", "%hhu", &msm4->sync_flag);
+    EXTRACT("DF409", "%hhu", &msm4->clk_steering);
+    EXTRACT("DF001_7", "%hhu", &msm4->ext_clk);
+    EXTRACT("DF411", "%hhu", &msm4->smooth_ind);
+    EXTRACT("DF412", "%hhu", &msm4->smooth_interval);
 
-    // Step 1: Parse MSM4 header (station ID, epoch time, flags)
-    sscanf(line,
-           "<RTCM(1074, DF002=1074, DF003=%hu, DF004=%u, DF393=%hhu, DF409=%hhu, DF001_7=%hhu, "
-           "DF411=%hhu, DF412=%hhu,",
-           &msm4->station_id, &msm4->epoch_time, &msm4->sync_flag, &msm4->clk_steering,
-           &msm4->ext_clk, &msm4->smooth_ind, &msm4->smooth_interval);
-
-    // Step 2: Extract NSat, NSig, NCell
-    const char *ncell_ptr = strstr(line, "NCell=");
-    if (ncell_ptr)
-        sscanf(ncell_ptr, "NCell=%hhu", &msm4->n_cell);
-
-    const char *nsat_ptr = strstr(line, "NSat=");
-    if (nsat_ptr)
-        sscanf(nsat_ptr, "NSat=%hhu", &msm4->n_sat);
-
-    const char *nsig_ptr = strstr(line, "NSig=");
-    if (nsig_ptr)
-        sscanf(nsig_ptr, "NSig=%hhu", &msm4->n_sig);
+    // Step 2: Extract counts
+    EXTRACT("NSat", "%hhu", &msm4->n_sat);
+    EXTRACT("NSig", "%hhu", &msm4->n_sig);
+    EXTRACT("NCell", "%hhu", &msm4->n_cell);
 
     // Step 3: Extract satellite PRNs (PRN_01, PRN_02, ...)
     for (int i = 0; i < msm4->n_sat; i++)
     {
-        char key[16], *ptr;
-        sprintf(key, "PRN_%02d=", i + 1);
-        ptr = strstr(line, key);
+        char key[16];
+        sprintf(key, "PRN_%02d", i + 1);
+        const char *ptr = strstr(line, key);
         if (ptr)
-            sscanf(ptr + strlen(key), "%hhu", &msm4->prn[i]);
+            sscanf(ptr + strlen(key) + 1, "%hhu", &msm4->prn[i]);
     }
 
     // Step 4: Extract DF400 (pseudorange), DF401 (carrier phase), DF402 (lock), DF403 (CNR)
     for (int i = 0; i < msm4->n_cell; i++)
     {
-        char key[24], *ptr;
+        char key[24];
+        const char *ptr;
 
-        sprintf(key, "DF400_%02d=", i + 1);
+        // DF400: Pseudorange
+        sprintf(key, "DF400_%02d", i + 1);
         ptr = strstr(line, key);
         if (ptr)
-            sscanf(ptr + strlen(key), "%lf", &msm4->pseudorange[i]);
+            sscanf(ptr + strlen(key) + 1, "%lf", &msm4->pseudorange[i]);
 
-        sprintf(key, "DF401_%02d=", i + 1);
+        // DF401: Carrier phase
+        sprintf(key, "DF401_%02d", i + 1);
         ptr = strstr(line, key);
         if (ptr)
-            sscanf(ptr + strlen(key), "%lf", &msm4->phase_range[i]);
+            sscanf(ptr + strlen(key) + 1, "%lf", &msm4->phase_range[i]);
 
-        sprintf(key, "DF402_%02d=", i + 1);
+        // DF402: Lock time
+        sprintf(key, "DF402_%02d", i + 1);
         ptr = strstr(line, key);
         if (ptr)
-            sscanf(ptr + strlen(key), "%hhu", &msm4->lock_time[i]);
+            sscanf(ptr + strlen(key) + 1, "%hhu", &msm4->lock_time[i]);
 
-        sprintf(key, "DF403_%02d=", i + 1);
+        // DF403: Carrier-to-noise ratio
+        sprintf(key, "DF403_%02d", i + 1);
         ptr = strstr(line, key);
         if (ptr)
-            sscanf(ptr + strlen(key), "%hhu", &msm4->cnr[i]);
+            sscanf(ptr + strlen(key) + 1, "%hhu", &msm4->cnr[i]);
     }
+
+    print_msm4(msm4); // quick debug print
 
     return 0;
 }

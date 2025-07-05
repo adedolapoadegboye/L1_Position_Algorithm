@@ -8,6 +8,6 @@ typedef struct
     double x, y, z;
 } ECEF_Coordinate;
 
-int calculate_position_least_squares(GNSS_ObservationSet *obs, ECEF_Coordinate *receiver_ecef);
+int calculate_position_least_squares(void);
 
 #endif // POSITION_SOLVER_H
