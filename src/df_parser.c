@@ -161,7 +161,6 @@ int parse_rtcm_1074(const char *line, rtcm_1074_msm4_t *msm4)
     }
 
     // Step 6: Extract DF400 (pseudorange), DF401 (carrier phase), DF402 (lock), DF403 (CNR)
-    // Step 6: Extract DF400–DF403 values for L1C cells ONLY
     l1_cell_index = 0;
 
     for (int i = 0; i < msm4->n_cell; i++)
@@ -221,6 +220,23 @@ int parse_rtcm_1074(const char *line, rtcm_1074_msm4_t *msm4)
 
     // Finalize the number of cells to the actual count of L1C cells
     msm4->n_cell = l1_cell_index;
+
+    // Step 7: Calculate pseudorange array
+    for (int i = 0; i < msm4->n_cell; i++)
+    {
+        // Check if the cell is valid (has a PRN and signal)
+        if (msm4->cell_prn[i] > 0 && msm4->cell_sig[i] == 1) // Only L1C cells
+        {
+            msm4->pseudorange[i] = compute_pseudorange(
+                msm4->pseudorange_integer[i],
+                msm4->pseudorange_mod_1s[i],
+                msm4->pseudorange_fine[i]);
+        }
+        else
+        {
+            msm4->pseudorange[i] = -1.0; // mark as invalid
+        }
+    }
 
     print_msm4(msm4); // quick debug print
 

@@ -104,6 +104,7 @@ typedef struct
     uint8_t pseudorange_integer[MAX_SAT]; ///< DF397_*: Rough range integer in milliseconds
     double pseudorange_mod_1s[MAX_SAT];   ///< DF398_*: Pseudorange modulo 1 second)
     double pseudorange_fine[MAX_CELL];    ///< DF400: Pseudorange residuals (seconds * c)
+    double pseudorange[MAX_SAT];          ///< Pseudorange = integer + mod_1s + fine (seconds * c)
     double phase_range[MAX_CELL];         ///< DF401: Carrier phase residuals (seconds * c)
     uint8_t lock_time[MAX_CELL];          ///< DF402: Lock time indicators
     uint8_t half_cycle_amb[MAX_CELL];     ///< DF420: Half-cycle ambiguity indicators
@@ -146,4 +147,18 @@ void print_msm4(const rtcm_1074_msm4_t *msm4);
  * @param eph Pointer to the ephemeris structure to print.
  */
 void print_ephemeris(const rtcm_1019_ephemeris_t *eph);
+
+/**
+ * @brief Computes the pseudorange from the given parameters.
+ *
+ * This function calculates the pseudorange using the formula:
+ * Pseudorange = c * (integer_ms * 1e-3 + mod1s_sec + fine_sec)
+ *
+ * @param integer_ms Rough range integer in milliseconds.
+ * @param mod1s_sec Pseudorange modulo 1 second.
+ * @param fine_sec Pseudorange residuals in seconds scaled by speed of light.
+ * @return Computed pseudorange in seconds.
+ */
+double compute_pseudorange(uint32_t integer_ms, double mod1s_sec, double fine_sec);
+
 #endif // DF_PARSER_H

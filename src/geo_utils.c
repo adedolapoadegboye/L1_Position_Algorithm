@@ -126,12 +126,13 @@ void print_msm4(const rtcm_1074_msm4_t *msm4)
     printf("\n-- Satellite PRNs --\n");
     for (int i = 0; i < msm4->n_sat; i++)
     {
-        printf("  PRN_%02d: %u  | Integer PR: %u  | Mod PR: %.12f | Fine PR: %.24f\n",
+        printf("  PRN_%02d: %u  | Integer PR: %u  | Mod PR: %.12f | Fine PR: %.24f | Full PR: %.24f\n",
                i + 1,
                msm4->prn[i],
                msm4->pseudorange_integer[i],
                msm4->pseudorange_mod_1s[i],
-               msm4->pseudorange_fine[i]);
+               msm4->pseudorange_fine[i],
+               msm4->pseudorange[i]);
     }
 
     printf("\n-- L1C Cell Observations --\n");
@@ -145,4 +146,20 @@ void print_msm4(const rtcm_1074_msm4_t *msm4)
     }
 
     printf("========================================\n");
+}
+
+/**
+ * @brief Computes the pseudorange from the given parameters.
+ *
+ * This function calculates the pseudorange using the formula:
+ * Pseudorange = c * (integer_ms * 1e-3 + mod1s_sec + fine_sec)
+ *
+ * @param integer_ms Rough range integer in milliseconds.
+ * @param mod1s_sec Pseudorange modulo 1 second.
+ * @param fine_sec Pseudorange residuals in seconds scaled by speed of light.
+ * @return The computed pseudorange in meters.
+ */
+double compute_pseudorange(uint32_t integer_ms, double mod1s_sec, double fine_sec)
+{
+    return SPEED_OF_LIGHT * (integer_ms * 1e-3) + mod1s_sec + fine_sec;
 }

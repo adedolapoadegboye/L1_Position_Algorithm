@@ -3,6 +3,8 @@
 
 #include "position_solver.h"
 
+#define SPEED_OF_LIGHT 299792458.0 // Speed of light in m/s
+
 typedef struct
 {
     double lat_deg;
