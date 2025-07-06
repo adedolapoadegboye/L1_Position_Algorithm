@@ -109,39 +109,37 @@ void print_msm4(const rtcm_1074_msm4_t *msm4)
     if (!msm4)
         return;
 
-    printf("\n=== RTCM 1074 MSM4 OBSERVATION DATA ===\n");
+    printf("\n========= RTCM 1074 MSM4 DATA =========\n");
 
     printf("Message Type        : %u\n", msm4->msg_type);
     printf("Station ID          : %u\n", msm4->station_id);
-    printf("Epoch Time (ms)     : %u\n", msm4->epoch_time);
-    printf("Sync Flag           : %u\n", msm4->sync_flag);
-    printf("Clock Steering      : %u\n", msm4->clk_steering);
-    printf("External Clock      : %u\n", msm4->ext_clk);
-    printf("Smoothing Indicator : %u\n", msm4->smooth_ind);
-    printf("Smoothing Interval  : %u\n", msm4->smooth_interval);
+    printf("Epoch Time (ms)     : %u\n", msm4->gps_epoch_time);
+    printf("Sync Flag           : %u\n", msm4->msm_sync_flag);
+    printf("Clock Steering Flag : %u\n", msm4->clk_steering_flag);
+    printf("External Clock Flag : %u\n", msm4->external_clk_flag);
+    printf("Smoothing Flag      : %u\n", msm4->smooth_interval_flag);
 
     printf("Number of Satellites: %u\n", msm4->n_sat);
-    printf("Number of Signals   : %u\n", msm4->n_sig);
-    printf("Number of Cells     : %u\n", msm4->n_cell);
+    printf("Signal Type         : %u\n", msm4->n_sig);
+    printf("Total Signal Count  : %u\n", msm4->n_cell);
 
-    printf("\n-- PRNs --\n");
+    printf("\n-- Satellite PRNs --\n");
     for (int i = 0; i < msm4->n_sat; i++)
     {
-        printf("  PRN_%02d: %u\n", i + 1, msm4->prn[i]);
+        printf("  PRN_%02d: %u  | Integer PR: %u  | Mod PR: %.12f | Fine PR: %.24f\n",
+               i + 1,
+               msm4->prn[i],
+               msm4->pseudorange_integer[i],
+               msm4->pseudorange_mod_1s[i],
+               msm4->pseudorange_fine[i]);
     }
 
-    printf("\n-- Signal IDs --\n");
-    for (int i = 0; i < msm4->n_sig; i++)
-    {
-        printf("  SIG_%02d: %u\n", i + 1, msm4->sig_id[i]);
-    }
-
-    printf("\n-- Observations (Cells) --\n");
+    printf("\n-- L1C Cell Observations --\n");
     for (int i = 0; i < msm4->n_cell; i++)
     {
         printf("  Cell %02d:\n", i + 1);
-        printf("    Pseudorange     : %.12f s\n", msm4->pseudorange[i]);
-        printf("    Phase Range     : %.12f s\n", msm4->phase_range[i]);
+        printf("    PRN             : %u\n", msm4->cell_prn[i]);
+        printf("    Signal ID       : %u (1 = L1C)\n", msm4->cell_sig[i]);
         printf("    Lock Time       : %u\n", msm4->lock_time[i]);
         printf("    CNR             : %u dBHz\n", msm4->cnr[i]);
     }

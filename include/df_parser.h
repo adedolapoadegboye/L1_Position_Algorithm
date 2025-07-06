@@ -79,31 +79,35 @@ typedef struct
  */
 typedef struct
 {
-    uint16_t msg_type;       ///< DF002: Message number (1074 for GPS MSM4)
-    uint16_t station_id;     ///< DF003: Reference station ID
-    uint32_t epoch_time;     ///< DF004: Epoch time in milliseconds of the week
-    uint8_t sync_flag;       ///< DF393: Epoch sync flag
-    uint8_t clk_steering;    ///< DF409: Clock steering indicator
-    uint8_t ext_clk;         ///< DF001_7: External clock indicator
-    uint8_t smooth_ind;      ///< DF411: Smoothing indicator
-    uint8_t smooth_interval; ///< DF412: Smoothing interval
+    uint16_t msg_type;            ///< DF002: Message number (1074 for GPS MSM4)
+    uint16_t station_id;          ///< DF003: Reference station ID
+    uint32_t gps_epoch_time;      ///< DF004: Epoch time in milliseconds of the week
+    uint8_t msm_sync_flag;        ///< DF393: Epoch sync flag
+    uint8_t iods_reserved;        ///< IODS – Issue Of Data Station
+    uint8_t reserved_DF001_07;    ///< DF001_7: Reserved for future use
+    uint8_t clk_steering_flag;    ///< DF411: Clock steering flag (0=none, 1=steered, 2=unknown, 3=reserved))
+    uint8_t external_clk_flag;    ///< DF412: External clock flag (0=internal, 1=external, 2=external but unreliable, 3=unknown))
+    uint8_t smooth_interval_flag; ///< DF417: Smoothing type indicator (0=divergence-free smoothing, 1=other smoothing)
 
-    uint8_t sat_mask[64];  ///< DF394: Satellite mask (bitmap)
-    uint8_t sig_mask[64];  ///< DF395: Signal mask (bitmap)
+    uint64_t sat_mask[64]; ///< DF394: Satellite mask (64 bits bitmap mapping PRNs 1-64))
+    uint32_t sig_mask[64]; ///< DF395: Signal mask (32 bits bitmap mapping available signals 1-32)
     uint8_t cell_mask[64]; ///< DF396: Cell mask (bitmap)
 
     uint8_t n_sat;  ///< Number of satellites used (NSat)
     uint8_t n_sig;  ///< Number of signals used (NSig)
     uint8_t n_cell; ///< Number of satellite-signal combinations (NCell)
 
-    uint8_t prn[MAX_SAT];    ///< PRN_01..PRN_N: Satellite PRNs
-    uint8_t sig_id[MAX_SIG]; ///< DF397_*: Signal identifiers per signal index
+    uint8_t cell_prn[MAX_CELL]; ///< Cell PRN mapping (CELLPRN_01, _02, ...)
+    uint8_t cell_sig[MAX_CELL]; ///< Cell signal mapping (CELLSIG_01, _02, ...)
 
-    double pseudorange[MAX_CELL];     ///< DF400: Pseudorange residuals (seconds * c)
-    double phase_range[MAX_CELL];     ///< DF401: Carrier phase residuals (seconds * c)
-    uint8_t lock_time[MAX_CELL];      ///< DF402: Lock time indicators
-    uint8_t half_cycle_amb[MAX_CELL]; ///< DF420: Half-cycle ambiguity indicators
-    uint8_t cnr[MAX_CELL];            ///< DF403: Carrier-to-noise ratio (dBHz scaled)
+    uint8_t prn[MAX_SAT];                 ///< PRN_01..PRN_N: Satellite PRNs
+    uint8_t pseudorange_integer[MAX_SAT]; ///< DF397_*: Rough range integer in milliseconds
+    double pseudorange_mod_1s[MAX_SAT];   ///< DF398_*: Pseudorange modulo 1 second)
+    double pseudorange_fine[MAX_CELL];    ///< DF400: Pseudorange residuals (seconds * c)
+    double phase_range[MAX_CELL];         ///< DF401: Carrier phase residuals (seconds * c)
+    uint8_t lock_time[MAX_CELL];          ///< DF402: Lock time indicators
+    uint8_t half_cycle_amb[MAX_CELL];     ///< DF420: Half-cycle ambiguity indicators
+    uint8_t cnr[MAX_CELL];                ///< DF403: Carrier-to-noise ratio (dBHz scaled)
 } rtcm_1074_msm4_t;
 
 /**

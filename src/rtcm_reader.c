@@ -39,7 +39,7 @@ int read_next_rtcm_message(FILE *fp)
         }
 
         // Debug print
-        printf(COLOR_GREEN "Processing Epoch: %d" COLOR_RESET, epoch_count++);
+        printf(COLOR_GREEN "Processing Epoch: %d \n" COLOR_RESET, epoch_count++);
 
         // Extract DF002 = message type
         char *df002_ptr = strstr(line, "DF002=");

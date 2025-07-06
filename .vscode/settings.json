@@ -21,8 +21,11 @@
         "position_solver.h": "c"
     },
     "cSpell.words": [
+        "CELLPRN",
+        "CELLSIG",
         "ECEF",
         "iodc",
-        "iode"
+        "iode",
+        "iods"
     ]
 }
