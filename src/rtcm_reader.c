@@ -28,7 +28,7 @@
 int read_next_rtcm_message(FILE *fp)
 {
     char line[4096];              // Buffer for reading lines
-    unsigned int epoch_count = 0; // Counter for epochs processed
+    unsigned int epoch_count = 1; // Counter for epochs processed
 
     while (fgets(line, sizeof(line), fp) != NULL)
     {
@@ -65,8 +65,15 @@ int read_next_rtcm_message(FILE *fp)
                 fprintf(stderr, COLOR_YELLOW "Warning: Failed to parse RTCM 1019 message. Skipping.\n" COLOR_RESET);
                 continue;
             }
-            // TODO: Store or use ephemeris as needed
+
+            if (store_ephemeris(&eph) != 0)
+            {
+                fprintf(stderr, COLOR_YELLOW "Warning: Failed to store/update ephemeris for PRN %d\n" COLOR_RESET, eph.satellite_id);
+            }
+
+            continue;
         }
+
         else if (message_type == 1074)
         {
             rtcm_1074_msm4_t msm4 = {0};

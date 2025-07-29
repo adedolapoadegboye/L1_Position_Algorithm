@@ -17,6 +17,12 @@
 #include <string.h>
 #include <stdlib.h>
 
+// Global ephemeris table
+rtcm_1019_ephemeris_t eph_table[MAX_SAT + 1] = {0}; // Index 1–32 (PRNs)
+bool eph_available[MAX_SAT + 1] = {false};
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
  * @brief Parses a single RTCM 1019 line into a structured ephemeris object.
  *
@@ -32,41 +38,44 @@ int parse_rtcm_1019(const char *line, rtcm_1019_ephemeris_t *eph)
     if (!line || !eph)
         return -1;
 
+    EXTRACT("DF002", "%hu", &eph->msg_type);
     EXTRACT("DF009", "%hhu", &eph->satellite_id);
-    EXTRACT("DF076", "%hhu", &eph->iode);
-    EXTRACT("DF077", "%hhu", &eph->ura_index);
-    EXTRACT("DF078", "%hhu", &eph->sv_health);
-    EXTRACT("DF079", "%lf", &eph->tgd);
-    EXTRACT("DF071", "%hhu", &eph->iodc);
-    EXTRACT("DF081", "%u", &eph->toc);
-    EXTRACT("DF082", "%lf", &eph->af2);
-    EXTRACT("DF083", "%lf", &eph->af1);
-    EXTRACT("DF084", "%lf", &eph->af0);
-    EXTRACT("DF085", "%hu", &eph->week_number);
-    EXTRACT("DF086", "%lf", &eph->crs);
-    EXTRACT("DF087", "%lf", &eph->delta_n);
-    EXTRACT("DF088", "%lf", &eph->m0);
-    EXTRACT("DF089", "%lf", &eph->cuc);
-    EXTRACT("DF090", "%lf", &eph->eccentricity);
-    EXTRACT("DF091", "%lf", &eph->cus);
-    EXTRACT("DF092", "%lf", &eph->sqrt_a);
-    EXTRACT("DF093", "%u", &eph->toe);
-    EXTRACT("DF094", "%lf", &eph->cic);
-    EXTRACT("DF095", "%lf", &eph->omega0);
-    EXTRACT("DF096", "%lf", &eph->cis);
-    EXTRACT("DF097", "%lf", &eph->i0);
-    EXTRACT("DF098", "%lf", &eph->crc);
-    EXTRACT("DF099", "%lf", &eph->omega);
-    EXTRACT("DF100", "%lf", &eph->omega_dot);
-    EXTRACT("DF101", "%lf", &eph->idot);
-    EXTRACT("DF102", "%hhu", &eph->fit_interval);
-    EXTRACT("DF103", "%hhu", &eph->spare);
+    EXTRACT("DF076", "%hu", &eph->gps_wn);
+    EXTRACT("DF077", "%hhu", &eph->gps_sv_acc);
+    EXTRACT("DF078", "%hhu", &eph->gps_code_l2);
+    EXTRACT("DF079", "%lf", &eph->gps_idot);
+    EXTRACT("DF071", "%hu", &eph->gps_iode);
+    EXTRACT("DF081", "%u", &eph->gps_toc);
+    EXTRACT("DF082", "%lf", &eph->gps_af2);
+    EXTRACT("DF083", "%lf", &eph->gps_af1);
+    EXTRACT("DF084", "%lf", &eph->gps_af0);
+    EXTRACT("DF085", "%hu", &eph->gps_iodc);
+    EXTRACT("DF086", "%lf", &eph->gps_crs);
+    EXTRACT("DF087", "%lf", &eph->gps_delta_n);
+    EXTRACT("DF088", "%lf", &eph->gps_m0);
+    EXTRACT("DF089", "%lf", &eph->gps_cuc);
+    EXTRACT("DF090", "%lf", &eph->gps_eccentricity);
+    EXTRACT("DF091", "%lf", &eph->gps_cus);
+    EXTRACT("DF092", "%lf", &eph->gps_sqrt_a);
+    EXTRACT("DF093", "%u", &eph->gps_toe);
+    EXTRACT("DF094", "%lf", &eph->gps_cic);
+    EXTRACT("DF095", "%lf", &eph->gps_omega0);
+    EXTRACT("DF096", "%lf", &eph->gps_cis);
+    EXTRACT("DF097", "%lf", &eph->gps_i0);
+    EXTRACT("DF098", "%lf", &eph->gps_crc);
+    EXTRACT("DF099", "%lf", &eph->gps_omega);
+    EXTRACT("DF100", "%lf", &eph->gps_omega_dot);
+    EXTRACT("DF101", "%lf", &eph->gps_tgd);
+    EXTRACT("DF102", "%hhu", &eph->gps_sv_health);
+    EXTRACT("DF103", "%hhu", &eph->gps_l2p_data_flag);
     EXTRACT("DF137", "%hu", &eph->gps_wn);
 
     print_ephemeris(eph); // quick debug print
 
     return 0;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief Parses a single RTCM 1074 MSM4 line into a structured observation object.
@@ -239,6 +248,41 @@ int parse_rtcm_1074(const char *line, rtcm_1074_msm4_t *msm4)
     }
 
     print_msm4(msm4); // quick debug print
+
+    return 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Stores or updates the ephemeris data for a given satellite.
+ *
+ * This function always updates the ephemeris for the specified satellite,
+ * regardless of IODE/IODC. It ensures the latest data is always stored.
+ *
+ * @param new_eph Pointer to the new ephemeris data to store.
+ * @return 0 on success, -1 if input is NULL, -2 if PRN is out of range (1-32).
+ */
+int store_ephemeris(const rtcm_1019_ephemeris_t *new_eph)
+{
+    if (!new_eph)
+        return -1;
+
+    uint8_t prn = new_eph->satellite_id;
+    if (prn < 1 || prn > MAX_SAT)
+        return -2;
+
+    eph_table[prn] = *new_eph;
+
+    if (!eph_available[prn])
+    {
+        eph_available[prn] = true;
+        printf(COLOR_GREEN "Stored new ephemeris for PRN %u\n" COLOR_RESET, prn);
+    }
+    else
+    {
+        printf(COLOR_GREEN "Updated ephemeris for PRN %u (overwrite)\n" COLOR_RESET, prn);
+    }
 
     return 0;
 }
