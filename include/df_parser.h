@@ -1,6 +1,9 @@
 #ifndef DF_PARSER_H
 #define DF_PARSER_H
 
+// Mathematical Pi constant
+#define PI 3.14159265358979323846264338327950288
+
 /// Maximum number of GPS satellites (PRNs 1–32)
 #define MAX_SAT 32
 
@@ -9,6 +12,9 @@
 
 /// Maximum number of signal-satellite combinations (cells)
 #define MAX_CELL 64
+
+// Maximum number of epochs to store in pseudorange history
+#define MAX_EPOCHS 10000
 
 /**
  * @brief Utility macro to extract a field from a line by DF label.
@@ -38,37 +44,47 @@
  */
 typedef struct
 {
-    uint16_t msg_type;         ///< DF002: Message number (should be 1019)
-    uint8_t satellite_id;      ///< DF009: Satellite PRN (space vehicle ID)
-    uint16_t gps_wn;           ///< DF076: GPS week number (modulo 1024)
-    uint8_t gps_sv_acc;        ///< DF077: SV accuracy index (URA)
-    uint8_t gps_code_l2;       ///< DF078: GPS code on L2 (00=reserved, 01=P code on, 10=C/A code on, 11=L2C on)
-    double gps_idot;           ///< DF079: GPS IDOT
-    uint16_t gps_iode;         ///< DF071 GPS IODE
-    uint32_t gps_toc;          ///< DF081: GPS time of clock (s of GPS week)
-    double gps_af2;            ///< DF082: Polynomial clock drift coefficient (s/s^2)
-    double gps_af1;            ///< DF083: Polynomial clock drift coefficient (s/s)
-    double gps_af0;            ///< DF084: Clock bias (s)
-    uint16_t gps_iodc;         ///< DF071 GPS IODC
-    double gps_crs;            ///< DF086: Radius correction sine term (m)
-    double gps_delta_n;        ///< DF087: Mean motion difference from computed value (rad/s)
-    double gps_m0;             ///< DF088: Mean anomaly at reference time (rad)
-    double gps_cuc;            ///< DF089: Latitude correction cosine term (rad)
-    double gps_eccentricity;   ///< DF090: Eccentricity
-    double gps_cus;            ///< DF091: Latitude correction sine term (rad)
-    double gps_sqrt_a;         ///< DF092: Square root of semi-major axis (sqrt(m))
-    uint32_t gps_toe;          ///< DF093: Time of ephemeris (s of GPS week)
-    double gps_cic;            ///< DF094: Inclination correction cosine term (rad)
-    double gps_omega0;         ///< DF095: Longitude of ascending node at weekly epoch (rad)
-    double gps_cis;            ///< DF096: Inclination correction sine term (rad)
-    double gps_i0;             ///< DF097: Inclination angle at reference time (rad)
-    double gps_crc;            ///< DF098: Radius correction cosine term (m)
-    double gps_omega;          ///< DF099: Argument of perigee (rad)
-    double gps_omega_dot;      ///< DF100: Rate of right ascension (rad/s)
-    double gps_tgd;            ///< DF101: Group delay differential (s)
-    uint8_t gps_sv_health;     ///< DF102: SV health status (0=healthy, 1=unhealthy, 2=unknown)
-    uint8_t gps_l2p_data_flag; ///< DF103: L2 P data flag (0=L2P P-code nav data available, 1=L2P P-code nav data unavailable
-    uint16_t gps_fit_interval; ///< DF137: GPS fit interval (0=not fit, 1=fit, 2=unknown)
+    uint16_t msg_type;                        ///< DF002: Message number (should be 1019)
+    uint8_t satellite_id;                     ///< DF009: Satellite PRN (space vehicle ID)
+    uint8_t sv;                               ///< DF009: Satellite PRN (space vehicle ID)
+    uint16_t gps_wn;                          ///< DF076: GPS week number (modulo 1024)
+    uint16_t week_number;                     ///< DF076 unscaled: GPS week number = gps_wn
+    uint8_t gps_sv_acc;                       ///< DF077: SV accuracy index (URA)
+    uint8_t gps_code_l2;                      ///< DF078: GPS code on L2 (00=reserved, 01=P code on, 10=C/A code on, 11=L2C on)
+    double gps_idot;                          ///< DF079: GPS IDOT
+    uint16_t gps_iode;                        ///< DF071 GPS IODE
+    uint32_t gps_toc;                         ///< DF081: GPS time of clock (s of GPS week)
+    uint32_t time_of_week;                    ///< DF081 unscaled: Time of week = gps_toc
+    double gps_af2;                           ///< DF082: Polynomial clock drift coefficient (s/s^2)
+    double gps_af1;                           ///< DF083: Polynomial clock drift coefficient (s/s)
+    double gps_af0;                           ///< DF084: Clock bias (s)
+    uint16_t gps_iodc;                        ///< DF071 GPS IODC
+    double gps_crs;                           ///< DF086: Radius correction sine term (m)
+    double gps_delta_n;                       ///< DF087: Mean motion difference from computed value (rad/s)
+    double gps_m0;                            ///< DF088: Mean anomaly at reference time (rad)
+    double mean_anomaly;                      ///< DF088 unscaled: Mean anomaly = gps_m0 * pi
+    double gps_cuc;                           ///< DF089: Latitude correction cosine term (rad)
+    double gps_eccentricity;                  ///< DF090: Eccentricity
+    double eccentricity;                      ///< DF090 unscaled: Eccentricity = gps_eccentricity * 2e-33
+    double gps_cus;                           ///< DF091: Latitude correction sine term (rad)
+    double gps_sqrt_a;                        ///< DF092: Square root of semi-major axis (sqrt(m))
+    double semi_major_axis;                   ///< DF092 unscaled: Semi-major axis = gps_sqrt_a ** 2
+    uint32_t gps_toe;                         ///< DF093: Time of ephemeris (s of GPS week)
+    double gps_cic;                           ///< DF094: Inclination correction cosine term (rad)
+    double gps_omega0;                        ///< DF095: Longitude of ascending node at weekly epoch (rad)
+    double right_ascension_of_ascending_node; ///< DF095 unscaled: Right ascension of ascending node = gps_omega0 * pi
+    double gps_cis;                           ///< DF096: Inclination correction sine term (rad)
+    double gps_i0;                            ///< DF097: Inclination angle at reference time (rad)
+    double inclination;                       ///< DF097: gps_i0 * pi
+    double gps_crc;                           ///< DF098: Radius correction cosine term (m)
+    double gps_omega;                         ///< DF099: Argument of perigee (rad)
+    double argument_of_periapsis;             ///< DF099 unscaled: Argument of perigee = gps_omega * pi
+    double gps_omega_dot;                     ///< DF100: Rate of right ascension (rad/s)
+    double gps_tgd;                           ///< DF101: Group delay differential (s)
+    uint8_t gps_sv_health;                    ///< DF102: SV health status (0=healthy, 1=unhealthy, 2=unknown)
+    uint8_t gps_l2p_data_flag;                ///< DF103: L2 P data flag (0=L2P P-code nav data available, 1=L2P P-code nav data unavailable
+    uint16_t gps_fit_interval;                ///< DF137: GPS fit interval (0=not fit, 1=fit, 2=unknown)
+    uint32_t time_since_epoch;                ///< Time since epoch in seconds = ((week_number * 604800) + time_of_week)
 } rtcm_1019_ephemeris_t;
 
 /**
@@ -162,5 +178,6 @@ void print_ephemeris(const rtcm_1019_ephemeris_t *eph);
 double compute_pseudorange(uint32_t integer_ms, double mod1s_sec, double fine_sec);
 
 int store_ephemeris(const rtcm_1019_ephemeris_t *new_eph);
+int store_msm4(const rtcm_1074_msm4_t *msm4);
 
 #endif // DF_PARSER_H

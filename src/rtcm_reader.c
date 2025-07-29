@@ -27,8 +27,8 @@
  */
 int read_next_rtcm_message(FILE *fp)
 {
-    char line[4096];              // Buffer for reading lines
-    unsigned int epoch_count = 1; // Counter for epochs processed
+    char line[4096];             // Buffer for reading lines
+    unsigned int line_count = 1; // Counter for lines processed
 
     while (fgets(line, sizeof(line), fp) != NULL)
     {
@@ -39,7 +39,7 @@ int read_next_rtcm_message(FILE *fp)
         }
 
         // Debug print
-        printf(COLOR_GREEN "Processing Epoch: %d \n" COLOR_RESET, epoch_count++);
+        printf(COLOR_GREEN "Processing Line: %d \n" COLOR_RESET, line_count++);
 
         // Extract DF002 = message type
         char *df002_ptr = strstr(line, "DF002=");
@@ -81,6 +81,11 @@ int read_next_rtcm_message(FILE *fp)
             {
                 fprintf(stderr, COLOR_YELLOW "Warning: Failed to parse RTCM 1074 message. Skipping.\n" COLOR_RESET);
                 continue;
+            }
+
+            if (store_msm4(&msm4) != 0)
+            {
+                fprintf(stderr, COLOR_YELLOW "Warning: Failed to store MSM4 data for epoch.\n" COLOR_RESET);
             }
             // TODO: Store or use observation data as needed
         }

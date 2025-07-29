@@ -21,6 +21,12 @@
 rtcm_1019_ephemeris_t eph_table[MAX_SAT + 1] = {0}; // Index 1–32 (PRNs)
 bool eph_available[MAX_SAT + 1] = {false};
 
+// Global pseudorange history
+
+// Pseudorange history: [PRN][epoch]
+double pseudorange_history[MAX_SAT + 1][MAX_EPOCHS] = {{0}};
+size_t pseudorange_count[MAX_SAT + 1] = {0};
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -40,12 +46,15 @@ int parse_rtcm_1019(const char *line, rtcm_1019_ephemeris_t *eph)
 
     EXTRACT("DF002", "%hu", &eph->msg_type);
     EXTRACT("DF009", "%hhu", &eph->satellite_id);
+    eph->sv = eph->satellite_id;
     EXTRACT("DF076", "%hu", &eph->gps_wn);
+    eph->week_number = eph->gps_wn;
     EXTRACT("DF077", "%hhu", &eph->gps_sv_acc);
     EXTRACT("DF078", "%hhu", &eph->gps_code_l2);
     EXTRACT("DF079", "%lf", &eph->gps_idot);
     EXTRACT("DF071", "%hu", &eph->gps_iode);
     EXTRACT("DF081", "%u", &eph->gps_toc);
+    eph->time_of_week = eph->gps_toc;
     EXTRACT("DF082", "%lf", &eph->gps_af2);
     EXTRACT("DF083", "%lf", &eph->gps_af1);
     EXTRACT("DF084", "%lf", &eph->gps_af0);
@@ -53,23 +62,29 @@ int parse_rtcm_1019(const char *line, rtcm_1019_ephemeris_t *eph)
     EXTRACT("DF086", "%lf", &eph->gps_crs);
     EXTRACT("DF087", "%lf", &eph->gps_delta_n);
     EXTRACT("DF088", "%lf", &eph->gps_m0);
+    eph->mean_anomaly = eph->gps_m0 * PI;
     EXTRACT("DF089", "%lf", &eph->gps_cuc);
     EXTRACT("DF090", "%lf", &eph->gps_eccentricity);
+    eph->eccentricity = eph->gps_eccentricity * 2e-33;
     EXTRACT("DF091", "%lf", &eph->gps_cus);
     EXTRACT("DF092", "%lf", &eph->gps_sqrt_a);
+    eph->semi_major_axis = eph->gps_sqrt_a * eph->gps_sqrt_a;
     EXTRACT("DF093", "%u", &eph->gps_toe);
     EXTRACT("DF094", "%lf", &eph->gps_cic);
     EXTRACT("DF095", "%lf", &eph->gps_omega0);
+    eph->right_ascension_of_ascending_node = eph->gps_omega0 * PI;
     EXTRACT("DF096", "%lf", &eph->gps_cis);
     EXTRACT("DF097", "%lf", &eph->gps_i0);
+    eph->inclination = eph->gps_i0 * PI;
     EXTRACT("DF098", "%lf", &eph->gps_crc);
     EXTRACT("DF099", "%lf", &eph->gps_omega);
+    eph->argument_of_periapsis = eph->gps_omega * PI;
     EXTRACT("DF100", "%lf", &eph->gps_omega_dot);
     EXTRACT("DF101", "%lf", &eph->gps_tgd);
     EXTRACT("DF102", "%hhu", &eph->gps_sv_health);
     EXTRACT("DF103", "%hhu", &eph->gps_l2p_data_flag);
     EXTRACT("DF137", "%hu", &eph->gps_wn);
-
+    eph->time_since_epoch = (eph->week_number * 604800) + eph->time_of_week;
     print_ephemeris(eph); // quick debug print
 
     return 0;
@@ -284,5 +299,38 @@ int store_ephemeris(const rtcm_1019_ephemeris_t *new_eph)
         printf(COLOR_GREEN "Updated ephemeris for PRN %u (overwrite)\n" COLOR_RESET, prn);
     }
 
+    return 0;
+}
+
+/**
+ * @brief Stores pseudorange for all satellites in the MSM4 message at the current epoch.
+ *
+ * This function appends the pseudorange for each PRN in the message to a history array,
+ * so you can later plot the time series for each satellite.
+ *
+ * @param new_msm4 Pointer to the new MSM4 observation data to store.
+ * @return 0 on success, -1 if input is NULL.
+ */
+int store_msm4(const rtcm_1074_msm4_t *new_msm4)
+{
+    if (!new_msm4)
+        return -1;
+
+    for (int i = 0; i < new_msm4->n_sat; i++)
+    {
+        uint8_t prn = new_msm4->prn[i];
+        if (prn < 1 || prn > MAX_SAT)
+            continue;
+        size_t epoch_idx = pseudorange_count[prn]++;
+        if (epoch_idx < MAX_EPOCHS)
+        {
+            pseudorange_history[prn][epoch_idx] = new_msm4->pseudorange[i];
+        }
+        else
+        {
+            printf(COLOR_RED "Warning: Pseudorange history for PRN %u exceeded max epochs (%d). Data may be lost.\n" COLOR_RESET, prn, MAX_EPOCHS);
+        }
+        printf(COLOR_GREEN "Stored pseudorange for PRN %u at epoch %zu : %.12f\n" COLOR_RESET, prn, epoch_idx, new_msm4->pseudorange[i]);
+    }
     return 0;
 }
