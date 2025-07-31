@@ -111,6 +111,7 @@ int parse_rtcm_1074(const char *line, rtcm_1074_msm4_t *msm4)
     EXTRACT("DF002", "%hu", &msm4->msg_type);
     EXTRACT("DF003", "%hu", &msm4->station_id);
     EXTRACT("DF004", "%u", &msm4->gps_epoch_time);
+    msm4->time_of_pseudorange = msm4->gps_epoch_time;
     EXTRACT("DF393", "%hhu", &msm4->msm_sync_flag);
     EXTRACT("DF409", "%hhu", &msm4->iods_reserved);
     EXTRACT("DF001_7", "%hhu", &msm4->reserved_DF001_07);
@@ -333,4 +334,27 @@ int store_msm4(const rtcm_1074_msm4_t *new_msm4)
         printf(COLOR_GREEN "Stored pseudorange for PRN %u at epoch %zu : %.12f\n" COLOR_RESET, prn, epoch_idx, new_msm4->pseudorange[i]);
     }
     return 0;
+}
+
+/**
+ * @brief Prints the stored pseudoranges for all satellites.
+ * This function iterates through the global pseudorange table
+ * and prints the details for each satellite that has valid ephemeris data.
+ */
+void print_all_stored_pseudoranges(void)
+{
+    for (int prn = 1; prn <= MAX_SAT; prn++)
+    {
+        if (pseudorange_count[prn] == 0)
+            continue;
+
+        printf("\n========== PRN %d ==========\n", prn);
+        printf("%-8s | %-18s\n", "Epoch", "Pseudorange (m)");
+        printf("---------+--------------------\n");
+
+        for (size_t j = 0; j < pseudorange_count[prn]; j++)
+        {
+            printf("%-8zu | %-18.3f\n", j, pseudorange_history[prn][j]);
+        }
+    }
 }

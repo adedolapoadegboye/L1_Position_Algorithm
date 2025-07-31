@@ -49,6 +49,8 @@ int file_input_mode(bool is_parsed)
         return 1; // Error reading message
     }
 
+    print_all_stored_ephemeris();
+
     // Future Steps:
     // - Calculate position using least squares
     // - Convert ECEF to geodetic

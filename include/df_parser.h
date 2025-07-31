@@ -98,6 +98,7 @@ typedef struct
     uint16_t msg_type;            ///< DF002: Message number (1074 for GPS MSM4)
     uint16_t station_id;          ///< DF003: Reference station ID
     uint32_t gps_epoch_time;      ///< DF004: Epoch time in milliseconds of the week
+    uint32_t time_of_pseudorange; ///< DF004: Epoch time in milliseconds of the week
     uint8_t msm_sync_flag;        ///< DF393: Epoch sync flag
     uint8_t iods_reserved;        ///< IODS – Issue Of Data Station
     uint8_t reserved_DF001_07;    ///< DF001_7: Reserved for future use
@@ -179,5 +180,6 @@ double compute_pseudorange(uint32_t integer_ms, double mod1s_sec, double fine_se
 
 int store_ephemeris(const rtcm_1019_ephemeris_t *new_eph);
 int store_msm4(const rtcm_1074_msm4_t *msm4);
+void print_all_stored_ephemeris(void);
 
 #endif // DF_PARSER_H

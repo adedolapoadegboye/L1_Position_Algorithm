@@ -92,6 +92,7 @@ int read_next_rtcm_message(FILE *fp)
 
         continue; // Successfully read and processed a supported message
     }
+    // print_all_stored_pseudoranges(); // debug print all stored ephemeris
 
     return 1; // End of file or no valid message found
 }
