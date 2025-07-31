@@ -17,16 +17,13 @@
 #include <string.h>
 #include <stdlib.h>
 
-// Global ephemeris table
-rtcm_1019_ephemeris_t eph_table[MAX_SAT + 1] = {0}; // Index 1–32 (PRNs)
-bool eph_available[MAX_SAT + 1] = {false};
-
-// Global pseudorange history
-
-// Pseudorange history: [PRN][epoch]
+//////////////////////////////////////////////////////////////////////////////////////////////
+bool eph_available[MAX_SAT + 1] = {0};
+size_t msm4_count[MAX_SAT + 1] = {0};
 double pseudorange_history[MAX_SAT + 1][MAX_EPOCHS] = {{0}};
 size_t pseudorange_count[MAX_SAT + 1] = {0};
-
+rtcm_1074_msm4_t msm4_history[MAX_SAT + 1][MAX_EPOCHS] = {{{0}}};
+rtcm_1019_ephemeris_t eph_table[MAX_SAT + 1] = {{0}};
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -288,18 +285,54 @@ int store_ephemeris(const rtcm_1019_ephemeris_t *new_eph)
     if (prn < 1 || prn > MAX_SAT)
         return -2;
 
-    eph_table[prn] = *new_eph;
-
-    if (!eph_available[prn])
+    size_t idx = eph_history[prn].count++;
+    if (idx < MAX_EPH_HISTORY)
     {
-        eph_available[prn] = true;
-        printf(COLOR_GREEN "Stored new ephemeris for PRN %u\n" COLOR_RESET, prn);
+        eph_history[prn].eph[idx] = *new_eph;
+        printf(COLOR_GREEN "Stored ephemeris for PRN %u at idx %zu\n" COLOR_RESET, prn, idx);
     }
     else
     {
-        printf(COLOR_GREEN "Updated ephemeris for PRN %u (overwrite)\n" COLOR_RESET, prn);
+        printf(COLOR_RED "Warning: Ephemeris history for PRN %u exceeded max entries (%d). Data may be lost.\n" COLOR_RESET, prn, MAX_EPH_HISTORY);
     }
 
+    // Optionally update eph_table[prn] and eph_available[prn] for legacy code
+    eph_table[prn] = *new_eph;
+    eph_available[prn] = true;
+
+    return 0;
+}
+
+/**
+ * @brief Stores the entire MSM4 struct for each PRN at the current epoch.
+ *
+ * This function appends the full MSM4 struct for each PRN in the message to a history array,
+ * so you can later access all MSM4 fields for every satellite and epoch.
+ *
+ * @param new_msm4 Pointer to the new MSM4 observation data to store.
+ * @return 0 on success, -1 if input is NULL.
+ */
+int store_msm4(const rtcm_1074_msm4_t *new_msm4)
+{
+    if (!new_msm4)
+        return -1;
+
+    for (int i = 0; i < new_msm4->n_sat; i++)
+    {
+        uint8_t prn = new_msm4->prn[i];
+        if (prn < 1 || prn > MAX_SAT)
+            continue;
+        size_t epoch_idx = msm4_count[prn]++;
+        if (epoch_idx < MAX_EPOCHS)
+        {
+            msm4_history[prn][epoch_idx] = *new_msm4;
+        }
+        else
+        {
+            printf(COLOR_RED "Warning: MSM4 history for PRN %u exceeded max epochs (%d). Data may be lost.\n" COLOR_RESET, prn, MAX_EPOCHS);
+        }
+        printf(COLOR_GREEN "Stored MSM4 for PRN %u at epoch %zu\n" COLOR_RESET, prn, epoch_idx);
+    }
     return 0;
 }
 
@@ -312,7 +345,7 @@ int store_ephemeris(const rtcm_1019_ephemeris_t *new_eph)
  * @param new_msm4 Pointer to the new MSM4 observation data to store.
  * @return 0 on success, -1 if input is NULL.
  */
-int store_msm4(const rtcm_1074_msm4_t *new_msm4)
+int store_pseudorange(const rtcm_1074_msm4_t *new_msm4)
 {
     if (!new_msm4)
         return -1;

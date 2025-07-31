@@ -1,6 +1,8 @@
 #ifndef DF_PARSER_H
 #define DF_PARSER_H
 
+#include "../include/algo.h"
+
 // Mathematical Pi constant
 #define PI 3.14159265358979323846264338327950288
 
@@ -15,6 +17,9 @@
 
 // Maximum number of epochs to store in pseudorange history
 #define MAX_EPOCHS 10000
+
+/// Maximum number of satellites to store in ephemeris history
+#define MAX_EPH_HISTORY 1000
 
 /**
  * @brief Utility macro to extract a field from a line by DF label.
@@ -178,8 +183,26 @@ void print_ephemeris(const rtcm_1019_ephemeris_t *eph);
  */
 double compute_pseudorange(uint32_t integer_ms, double mod1s_sec, double fine_sec);
 
+// Pseudorange history: [PRN][epoch]
+
 int store_ephemeris(const rtcm_1019_ephemeris_t *new_eph);
-int store_msm4(const rtcm_1074_msm4_t *msm4);
+int store_msm4(const rtcm_1074_msm4_t *new_msm4);
+int store_pseudorange(const rtcm_1074_msm4_t *msm4);
 void print_all_stored_ephemeris(void);
+
+typedef struct
+{
+    rtcm_1019_ephemeris_t eph[MAX_EPH_HISTORY];
+    size_t count;
+} eph_history_t;
+
+eph_history_t eph_history[MAX_SAT + 1]; // Index 1–32 (PRNs)
+
+extern bool eph_available[MAX_SAT + 1];
+extern size_t msm4_count[MAX_SAT + 1];
+extern double pseudorange_history[MAX_SAT + 1][MAX_EPOCHS];
+extern size_t pseudorange_count[MAX_SAT + 1];
+extern rtcm_1074_msm4_t msm4_history[MAX_SAT + 1][MAX_EPOCHS];
+extern rtcm_1019_ephemeris_t eph_table[MAX_SAT + 1];
 
 #endif // DF_PARSER_H

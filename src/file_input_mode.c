@@ -19,6 +19,7 @@
 #include "../include/rtcm_reader.h"
 #include "../include/geo_utils.h"
 #include "../include/position_solver.h"
+#include "../include/satellites.h"
 
 /**
  * @brief Main loop for processing a recorded RTCM input file.
@@ -40,7 +41,8 @@ int file_input_mode(bool is_parsed)
         return 1; // Failed to open file
     }
 
-    // Step 2: Loop through each epoch in the file
+    // Step 2: Loop through each epoch in the file and parse teh pseudorange and eph data
+    // At the end of this loop, all MSM4 and ephemeris data will be stored in global tables, ready for processing
     int status = read_next_rtcm_message(fp);
     if (status != 0)
     {
@@ -49,29 +51,14 @@ int file_input_mode(bool is_parsed)
         return 1; // Error reading message
     }
 
-    print_all_stored_ephemeris();
-
-    // Future Steps:
-    // - Calculate position using least squares
-    // - Convert ECEF to geodetic
-    // - Print output position
-    //
-    // Example (commented for now):
-    // ECEF_Coordinate receiver_ecef;
-    // status = calculate_position_least_squares(&obs, &receiver_ecef);
-    // if (status != 0)
-    // {
-    //     fprintf(stderr, COLOR_YELLOW "Warning: Least squares solution failed. Skipping epoch.\n" COLOR_RESET);
-    //     continue;
-    // }
-    //
-    // Geodetic_Coordinate receiver_geo;
-    // ecef_to_geodetic(&receiver_ecef, &receiver_geo);
-    //
-    // printf(COLOR_GREEN "\nEpoch Position:\n" COLOR_RESET);
-    // printf("Latitude  : %.8f\xC2\xB0\n", receiver_geo.lat_deg);
-    // printf("Longitude : %.8f\xC2\xB0\n", receiver_geo.lon_deg);
-    // printf("Altitude  : %.3f m\n", receiver_geo.alt_m);
+    // Step 3: Calculate the satellite position using the pseudorange and sat eph data
+    int sat_sorter_status = sort_satellites(eph_history, msm4_history);
+    if (sat_sorter_status != 0)
+    {
+        fprintf(stderr, COLOR_RED "Error: Failed to sort satellites.\n" COLOR_RESET);
+        fclose(fp);
+        return 1; // Error sorting satellites
+    }
 
     fclose(fp);
     return 0;
