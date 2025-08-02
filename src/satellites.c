@@ -10,15 +10,13 @@
 #include "../include/rtcm_reader.h"
 #include "../include/geo_utils.h"
 #include "../include/position_solver.h"
-
 #include "../include/df_parser.h"
 #include "../include/satellites.h"
-#include <string.h>
 
 gps_satellite_data_t gps_list[MAX_SAT + 1];
 
-// Helper: Find the latest eph index for prn whose time_of_week <= pseudorange_time
-static int find_latest_eph_idx(const eph_history_t *hist, uint32_t pseudorange_time)
+// Helper: Find the closest eph index for prn whose EPH time_of_week is just before or equal to pseudorange_time
+static int find_closest_eph_idx(const eph_history_t *hist, uint32_t pseudorange_time)
 {
     int best_idx = -1;
     uint32_t best_time = 0;
@@ -56,7 +54,7 @@ int sort_satellites(eph_history_t *eph_history_table, rtcm_1074_msm4_t msm4_hist
                     found = 1;
 
                     // Find the latest eph for this pseudorange time
-                    int eph_idx = find_latest_eph_idx(&eph_history[prn], msm4_history_table[prn][i].time_of_pseudorange);
+                    int eph_idx = find_closest_eph_idx(&eph_history[prn], msm4_history_table[prn][i].time_of_pseudorange);
                     if (eph_idx >= 0)
                     {
                         const rtcm_1019_ephemeris_t *eph = &eph_history_table[prn].eph[eph_idx];

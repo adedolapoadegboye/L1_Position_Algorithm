@@ -18,7 +18,9 @@
         "unordered_map": "c",
         "vector": "c",
         "__locale": "c",
-        "position_solver.h": "c"
+        "position_solver.h": "c",
+        "satellites.h": "c",
+        "df_parser.h": "c"
     },
     "cSpell.words": [
         "CELLPRN",
@@ -27,6 +29,7 @@
         "iodc",
         "iode",
         "iods",
-        "periapsis"
+        "periapsis",
+        "Perifocal"
     ]
 }

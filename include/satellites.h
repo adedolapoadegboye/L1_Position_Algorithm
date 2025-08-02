@@ -24,4 +24,11 @@ typedef struct
 extern gps_satellite_data_t gps_list[MAX_SAT + 1];
 void print_gps_list(void);
 
+// ECI satellite position calculation
+#define EARTH_MASS 5.9722e24               // kg
+#define GRAVITATIONAL_CONSTANT 6.67430e-11 // m^3 kg^-1 s^-2
+
+// Earth's standard gravitational parameter (mu = GM), in m^3/s^2
+#define MU (EARTH_MASS * GRAVITATIONAL_CONSTANT)
+
 #endif
