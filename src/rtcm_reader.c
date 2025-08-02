@@ -94,5 +94,5 @@ int read_next_rtcm_message(FILE *fp)
     }
     // print_all_stored_pseudoranges(); // debug print all stored ephemeris
 
-    return 1; // End of file or no valid message found
+    return 0; // End of file or no valid message found
 }
