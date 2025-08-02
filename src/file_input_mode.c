@@ -51,13 +51,18 @@ int file_input_mode(bool is_parsed)
         return 1; // Error reading message
     }
 
-    // Step 3: Calculate the satellite position using the pseudorange and sat eph data
+    // Step 3: Sort through the stored ephemeris and MSM4 data to prepare for position solving
     int sat_sorter_status = sort_satellites(eph_history, msm4_history);
     if (sat_sorter_status != 0)
     {
         fprintf(stderr, COLOR_RED "Error: Failed to sort satellites.\n" COLOR_RESET);
         fclose(fp);
         return 1; // Error sorting satellites
+    }
+    else
+    {
+        printf(COLOR_GREEN "Successfully sorted satellites.\n" COLOR_RESET);
+        print_gps_list(); // Print the sorted satellite data for debugging
     }
 
     fclose(fp);

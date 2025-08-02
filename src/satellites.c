@@ -98,3 +98,46 @@ int sort_satellites(eph_history_t *eph_history_table, rtcm_1074_msm4_t msm4_hist
     }
     return 0;
 }
+/**
+ * @brief Prints the GPS satellite data summary.
+ * This function iterates through the global gps_list and prints the details for each satellite that has valid ephemeris data.
+ */
+
+void print_gps_list(void)
+{
+    printf("============================================\n");
+    printf("         GPS Satellite Data Summary         \n");
+    printf("============================================\n");
+
+    for (int prn = 1; prn <= MAX_SAT; prn++)
+    {
+        // Find the number of valid pseudorange entries for this PRN
+        int count = 0;
+        for (int i = 0; i < MAX_EPOCHS; i++)
+        {
+            if (gps_list[prn].pseudoranges[i] != 0)
+                count++;
+        }
+        if (count == 0)
+            continue;
+
+        printf("\nPRN %d: %d epochs\n", prn, count);
+        printf("Idx | Pseudorange      | Time_of_PR    | Eccentricity   | Inclination    | Mean_Anomaly   | SemiMajorAxis   | RAAN           | ArgPeriapsis    | TOE\n");
+        printf("----+------------------+---------------+----------------+----------------+----------------+----------------+----------------+----------------+------------\n");
+        for (int i = 0; i < count; i++)
+        {
+            printf("%3d | %16.6f | %11u | %14.8g | %14.8g | %14.8g | %14.8g | %14.8g | %14.8g | %10.0f\n",
+                   i,
+                   gps_list[prn].pseudoranges[i],
+                   gps_list[prn].times_of_pseudorange[i],
+                   gps_list[prn].eccentricities[i],
+                   gps_list[prn].inclinations[i],
+                   gps_list[prn].mean_anomalies[i],
+                   gps_list[prn].semi_major_axes[i],
+                   gps_list[prn].right_ascension_of_ascending_node[i],
+                   gps_list[prn].argument_of_periapsis[i],
+                   gps_list[prn].times_of_ephemeris[i]);
+        }
+    }
+    printf("\n============================================\n");
+}

@@ -22,5 +22,6 @@ typedef struct
 } gps_satellite_data_t;
 
 extern gps_satellite_data_t gps_list[MAX_SAT + 1];
+void print_gps_list(void);
 
 #endif
