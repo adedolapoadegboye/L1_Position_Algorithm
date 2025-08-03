@@ -31,4 +31,6 @@ void print_gps_list(void);
 // Earth's standard gravitational parameter (mu = GM), in m^3/s^2
 #define MU (EARTH_MASS * GRAVITATIONAL_CONSTANT)
 
+int satellite_position_eci(const gps_satellite_data_t gps_lists[]);
+
 #endif

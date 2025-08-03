@@ -65,6 +65,19 @@ int file_input_mode(bool is_parsed)
         print_gps_list(); // Print the sorted satellite data for debugging
     }
 
+    // Step 4: Find satellite positions in ECI coordinates
+    int eci_status = satellite_position_eci(gps_list);
+    if (eci_status != 0)
+    {
+        fprintf(stderr, COLOR_RED "Error: Failed to find satellite positions in ECI.\n" COLOR_RESET);
+        fclose(fp);
+        return 1; // Error finding satellite positions
+    }
+    else
+    {
+        printf(COLOR_GREEN "Successfully found satellite positions in ECI.\n" COLOR_RESET);
+    }
+
     fclose(fp);
     return 0;
 }

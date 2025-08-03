@@ -33,15 +33,6 @@ int satellite_position_eci(const gps_satellite_data_t gps_lists[])
             continue;
         }
 
-        // Use first ephemeris for all epochs (as in your Python code)
-        double a = gps_lists[prn].semi_major_axes[0];
-        double e = gps_lists[prn].eccentricities[0];
-        double i0 = gps_lists[prn].inclinations[0];
-        double M0 = gps_lists[prn].mean_anomalies[0];
-        double Omega = gps_lists[prn].right_ascension_of_ascending_node[0];
-        double omega = gps_lists[prn].argument_of_periapsis[0];
-        double toe = gps_lists[prn].times_of_ephemeris[0];
-
         // Iterate through each epoch of the satellite data
         for (int k = 0; k < MAX_EPOCHS; k++)
         {
@@ -49,36 +40,42 @@ int satellite_position_eci(const gps_satellite_data_t gps_lists[])
                 continue;
 
             // Time difference (seconds)
-            double time_diff = gps_lists[prn].times_of_pseudorange[k] - gps_lists[prn].times_of_ephemeris[k];
+            double time_diff = (gps_lists[prn].times_of_pseudorange[k] / 1000) - gps_lists[prn].times_of_ephemeris[k];
 
-            // Mean motion (rad/s)
-            double n = sqrt(MU / pow(a, 3));
+            // Mean motion (deg/s)
+            double mean_motion = sqrt(MU / pow(gps_lists[prn].semi_major_axes[k], 3));
 
             // Mean anomaly at this epoch
-            double M = M0 + n * time_diff;
+            double mean_anomaly = gps_lists[prn].mean_anomalies[k] + (mean_motion * time_diff);
 
             // True anomaly approximation (series expansion)
-            double true_anomaly = M + (2 * e - 0.25 * pow(e, 3)) * sin(M) + (1.25 * pow(e, 2)) * sin(2 * M) + (13.0 / 12.0) * pow(e, 3) * sin(3 * M);
+            double true_anomaly = mean_anomaly + (2 * gps_lists[prn].eccentricities[k] - 0.25 * pow(gps_lists[prn].eccentricities[k], 3)) * sin(mean_anomaly) + (1.25 * pow(gps_lists[prn].eccentricities[k], 2)) * sin(2 * mean_anomaly) + (13.0 / 12.0) * pow(gps_lists[prn].eccentricities[k], 3) * sin(3 * mean_anomaly);
+
+            printf("PRN %d, Epoch %d: Time delta= %.3f Mean motion= %.3f Mean Anomaly = %.3f, True Anomaly = %.3f\n", prn, k, time_diff, mean_motion, mean_anomaly, true_anomaly);
 
             // Perifocal coordinates
-            double r = a * (1 - e * e) / (1 + e * cos(true_anomaly));
-            double p = r * cos(true_anomaly);
-            double q = r * sin(true_anomaly);
+            double radius = gps_lists[prn].semi_major_axes[k] * (1 - pow(gps_lists[prn].eccentricities[k], 2)) / (1 + gps_lists[prn].eccentricities[k] * cos(true_anomaly));
+            double p = radius * cos(true_anomaly);
+            double q = radius * sin(true_anomaly);
             double w = 0.0;
             double pqw[3] = {p, q, w};
 
-            // Rotation matrices
+            printf("PRN %d, Epoch %d: PQW = [%.3f, %.3f, %.3f]\n", prn, k, pqw[0], pqw[1], pqw[2]);
+
+            // // Rotation matrices
             double Rz_omega[3][3] = {
-                {cos(-omega), -sin(-omega), 0},
-                {sin(-omega), cos(-omega), 0},
+                {cos(-gps_lists[prn].argument_of_periapsis[k]), -sin(-gps_lists[prn].argument_of_periapsis[k]), 0},
+                {sin(-gps_lists[prn].argument_of_periapsis[k]), cos(-gps_lists[prn].argument_of_periapsis[k]), 0},
                 {0, 0, 1}};
+
             double Rx_i[3][3] = {
                 {1, 0, 0},
-                {0, cos(-i0), -sin(-i0)},
-                {0, sin(-i0), cos(-i0)}};
+                {0, cos(-gps_lists[prn].inclinations[k]), -sin(-gps_lists[prn].inclinations[k])},
+                {0, sin(-gps_lists[prn].inclinations[k]), cos(-gps_lists[prn].inclinations[k])}};
+
             double Rz_Omega[3][3] = {
-                {cos(-Omega), -sin(-Omega), 0},
-                {sin(-Omega), cos(-Omega), 0},
+                {cos(-gps_lists[prn].right_ascension_of_ascending_node[k]), -sin(-gps_lists[prn].right_ascension_of_ascending_node[k]), 0},
+                {sin(-gps_lists[prn].right_ascension_of_ascending_node[k]), cos(-gps_lists[prn].right_ascension_of_ascending_node[k]), 0},
                 {0, 0, 1}};
 
             // Apply rotations: PQW -> ECI
