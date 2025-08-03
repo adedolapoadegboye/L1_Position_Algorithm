@@ -33,4 +33,11 @@ void print_gps_list(void);
 
 int satellite_position_eci(const gps_satellite_data_t gps_lists[]);
 
+typedef struct
+{
+    double x[MAX_EPOCHS];
+    double y[MAX_EPOCHS];
+    double z[MAX_EPOCHS];
+} sat_eci_history_t;
+
 #endif

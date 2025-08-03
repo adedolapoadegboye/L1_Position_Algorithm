@@ -25,6 +25,8 @@ static void mat3x3_vec3_mult(const double mat[3][3], const double vec[3], double
 
 int satellite_position_eci(const gps_satellite_data_t gps_lists[])
 {
+    sat_eci_history_t sat_eci_positions[MAX_SAT + 1] = {0}; // Initialize ECI positions for all satellites
+
     for (int prn = 1; prn <= MAX_SAT; prn++)
     {
         if (gps_lists[prn].times_of_ephemeris[0] == 0)
@@ -83,6 +85,11 @@ int satellite_position_eci(const gps_satellite_data_t gps_lists[])
             mat3x3_vec3_mult(Rz_omega, pqw, temp1);
             mat3x3_vec3_mult(Rx_i, temp1, temp2);
             mat3x3_vec3_mult(Rz_Omega, temp2, eci);
+
+            // Save ECI position
+            sat_eci_positions[prn].x[k] = eci[0];
+            sat_eci_positions[prn].y[k] = eci[1];
+            sat_eci_positions[prn].z[k] = eci[2];
 
             printf("PRN %d, Epoch %d: ECI = [%.3f, %.3f, %.3f]\n", prn, k, eci[0], eci[1], eci[2]);
         }
