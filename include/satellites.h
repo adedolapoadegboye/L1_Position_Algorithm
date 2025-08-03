@@ -27,6 +27,7 @@ void print_gps_list(void);
 // ECI satellite position calculation
 #define EARTH_MASS 5.9722e24               // kg
 #define GRAVITATIONAL_CONSTANT 6.67430e-11 // m^3 kg^-1 s^-2
+#define OMEGA_EARTH 7.2921151467e-5        // rad/s, Earth's rotation rate
 
 // Earth's standard gravitational parameter (mu = GM), in m^3/s^2
 #define MU (EARTH_MASS * GRAVITATIONAL_CONSTANT)
@@ -39,5 +40,20 @@ typedef struct
     double y[MAX_EPOCHS];
     double z[MAX_EPOCHS];
 } sat_eci_history_t;
+
+extern sat_eci_history_t sat_eci_positions[MAX_SAT + 1];
+
+void mat3x3_vec3_mult(const double mat[3][3], const double vec[3], double out[3]);
+
+typedef struct
+{
+    double x[MAX_EPOCHS];
+    double y[MAX_EPOCHS];
+    double z[MAX_EPOCHS];
+} sat_ecef_history_t;
+
+extern sat_ecef_history_t sat_ecef_positions[MAX_SAT + 1];
+
+int satellite_position_ecef(const sat_eci_history_t sat_eci_position[MAX_SAT + 1], const gps_satellite_data_t gps_lists[MAX_SAT + 1]);
 
 #endif

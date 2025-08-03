@@ -15,7 +15,7 @@
 #include "../include/satellites.h"
 
 // Helper: Rotation matrix multiplication for 3x3 and 1x3 vector
-static void mat3x3_vec3_mult(const double mat[3][3], const double vec[3], double out[3])
+void mat3x3_vec3_mult(const double mat[3][3], const double vec[3], double out[3])
 {
     for (int i = 0; i < 3; i++)
     {
@@ -25,8 +25,6 @@ static void mat3x3_vec3_mult(const double mat[3][3], const double vec[3], double
 
 int satellite_position_eci(const gps_satellite_data_t gps_lists[])
 {
-    sat_eci_history_t sat_eci_positions[MAX_SAT + 1] = {0}; // Initialize ECI positions for all satellites
-
     for (int prn = 1; prn <= MAX_SAT; prn++)
     {
         if (gps_lists[prn].times_of_ephemeris[0] == 0)
