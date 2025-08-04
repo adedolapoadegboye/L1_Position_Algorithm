@@ -44,7 +44,7 @@ int satellite_orbit_eci(const gps_satellite_data_t gps_lists[])
         {
             double radius = (gps_lists[prn].semi_major_axes[0] * (1 - pow(gps_lists[prn].eccentricities[0], 2))) / (1 + gps_lists[prn].eccentricities[0] * cos(mean_anomalies[j]));
 
-            printf("Radius for PRN %d, Mean Anomaly %d: %.3f\n", prn, j, radius);
+            // printf("Radius for PRN %d, Mean Anomaly %d: %.3f\n", prn, j, radius);
 
             pqw[j][0] = (radius * cos(mean_anomalies[j])) / 1000;
             pqw[j][1] = (radius * sin(mean_anomalies[j])) / 1000;
@@ -54,7 +54,7 @@ int satellite_orbit_eci(const gps_satellite_data_t gps_lists[])
             sat_orbit_pqw_positions[prn].q[j] = pqw[j][1];
             sat_orbit_pqw_positions[prn].w[j] = pqw[j][2];
 
-            printf("PRN: %d, Orbit PQW[%d][0]: %.3f, Orbit PQW[%d][1]: %.3f, Orbit PQW[%d][2]: %.3f\n", prn, j, pqw[j][0], j, pqw[j][1], j, pqw[j][2]);
+            // printf("PRN: %d, Orbit PQW[%d][0]: %.3f, Orbit PQW[%d][1]: %.3f, Orbit PQW[%d][2]: %.3f\n", prn, j, pqw[j][0], j, pqw[j][1], j, pqw[j][2]);
         }
         // Compute ECI for all PQW for this PRN
         for (int k = 0; k < n_steps; k++)
@@ -85,7 +85,7 @@ int satellite_orbit_eci(const gps_satellite_data_t gps_lists[])
             sat_orbit_eci_positions[prn].y[k] = eci[k][1];
             sat_orbit_eci_positions[prn].z[k] = eci[k][2];
 
-            printf("PRN: %d, Orbit ECI[%d][0]: %.3f, Orbit ECI[%d][1]: %.3f, Orbit ECI[%d][2]: %.3f\n", prn, k, eci[k][0], k, eci[k][1], k, eci[k][2]);
+            // printf("PRN: %d, Orbit ECI[%d][0]: %.3f, Orbit ECI[%d][1]: %.3f, Orbit ECI[%d][2]: %.3f\n", prn, k, eci[k][0], k, eci[k][1], k, eci[k][2]);
         }
     }
     return 0;
