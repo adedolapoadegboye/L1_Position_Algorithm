@@ -20,7 +20,8 @@
         "__locale": "c",
         "position_solver.h": "c",
         "satellites.h": "c",
-        "df_parser.h": "c"
+        "df_parser.h": "c",
+        "rtcm_reader.h": "c"
     },
     "cSpell.words": [
         "CELLPRN",

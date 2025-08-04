@@ -54,6 +54,28 @@ typedef struct
 
 extern sat_ecef_history_t sat_ecef_positions[MAX_SAT + 1];
 
+extern sat_ecef_history_t sat_ecef_positions[MAX_SAT + 1];
+
+typedef struct
+{
+    double p[MAX_EPOCHS];
+    double q[MAX_EPOCHS];
+    double w[MAX_EPOCHS];
+} sat_orbit_pqw_history_t;
+
+extern sat_orbit_pqw_history_t sat_orbit_pqw_positions[MAX_SAT + 1];
+
+typedef struct
+{
+    double x[MAX_EPOCHS];
+    double y[MAX_EPOCHS];
+    double z[MAX_EPOCHS];
+} sat_orbit_eci_history_t;
+
+extern sat_orbit_eci_history_t sat_orbit_eci_positions[MAX_SAT + 1];
+
 int satellite_position_ecef(const sat_eci_history_t sat_eci_position[MAX_SAT + 1], const gps_satellite_data_t gps_lists[MAX_SAT + 1]);
+
+int satellite_orbit_eci(const gps_satellite_data_t gps_lists[]);
 
 #endif

@@ -90,6 +90,19 @@ int file_input_mode(bool is_parsed)
         printf(COLOR_GREEN "Successfully converted satellite positions to ECEF.\n" COLOR_RESET);
     }
 
+    // Step 5: Estimate full orbit for each satellite
+    int orbit_status = satellite_orbit_eci(gps_list);
+    if (orbit_status != 0)
+    {
+        fprintf(stderr, COLOR_RED "Error: Failed to estimate satellite orbits in ECI.\n" COLOR_RESET);
+        fclose(fp);
+        return 1; // Error estimating satellite orbits
+    }
+    else
+    {
+        printf(COLOR_GREEN "Successfully estimated satellite orbits in ECI.\n" COLOR_RESET);
+    }
+
     fclose(fp);
     return 0;
 }

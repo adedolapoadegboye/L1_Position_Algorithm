@@ -16,6 +16,8 @@
 gps_satellite_data_t gps_list[MAX_SAT + 1];
 sat_eci_history_t sat_eci_positions[MAX_SAT + 1];
 sat_ecef_history_t sat_ecef_positions[MAX_SAT + 1];
+sat_orbit_pqw_history_t sat_orbit_pqw_positions[MAX_SAT + 1];
+sat_orbit_eci_history_t sat_orbit_eci_positions[MAX_SAT + 1];
 
 // Helper: Find the closest eph index for prn whose EPH time_of_week is just before or equal to pseudorange_time
 static int find_closest_eph_idx(const eph_history_t *hist, uint32_t pseudorange_time)
