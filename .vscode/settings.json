@@ -27,10 +27,12 @@
         "CELLPRN",
         "CELLSIG",
         "ECEF",
+        "ecefs",
         "iodc",
         "iode",
         "iods",
         "periapsis",
-        "Perifocal"
+        "Perifocal",
+        "Raphson"
     ]
 }

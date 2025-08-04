@@ -20,6 +20,7 @@
 #include "../include/geo_utils.h"
 #include "../include/position_solver.h"
 #include "../include/satellites.h"
+#include "../include/receiver.h"
 
 /**
  * @brief Main loop for processing a recorded RTCM input file.
@@ -101,6 +102,19 @@ int file_input_mode(bool is_parsed)
     else
     {
         printf(COLOR_GREEN "Successfully estimated satellite orbits in ECI.\n" COLOR_RESET);
+    }
+
+    // Step 6: Estimate receiver position in ECEF coordinates using least squares
+    int position_status = estimate_receiver_positions(gps_list, sat_ecef_positions);
+    if (position_status != 0)
+    {
+        fprintf(stderr, COLOR_RED "Error: Failed to estimate receiver position.\n" COLOR_RESET);
+        fclose(fp);
+        return 1; // Error estimating receiver position
+    }
+    else
+    {
+        printf(COLOR_GREEN "Successfully estimated receiver position in ECEF.\n" COLOR_RESET);
     }
 
     fclose(fp);
