@@ -8,10 +8,9 @@
 #include "../include/algo.h"
 #include "../include/df_parser.h"
 #include "../include/rtcm_reader.h"
-#include "../include/geo_utils.h"
-#include "../include/position_solver.h"
 #include "../include/df_parser.h"
 #include "../include/satellites.h"
+#include "../include/receiver.h"
 
 gps_satellite_data_t gps_list[MAX_SAT + 1];
 sat_eci_history_t sat_eci_positions[MAX_SAT + 1];

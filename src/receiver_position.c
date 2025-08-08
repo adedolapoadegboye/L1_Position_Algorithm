@@ -8,13 +8,12 @@
 #include "../include/algo.h"
 #include "../include/df_parser.h"
 #include "../include/rtcm_reader.h"
-#include "../include/geo_utils.h"
-#include "../include/position_solver.h"
 #include "../include/df_parser.h"
 #include "../include/satellites.h"
 #include "../include/receiver.h"
 
 estimated_position_t estimated_positions_ecef[MAX_SAT + 1] = {0};
+latlonalt_position_t latlonalt_positions[MAX_SAT + 1] = {0};
 
 static int collect_unique_pr_times(const gps_satellite_data_t gps_lists[MAX_SAT + 1], uint32_t all_times[MAX_EPOCHS])
 {
@@ -274,8 +273,19 @@ int estimate_receiver_positions(void)
         estimated_positions_ecef[t_idx].x[0] = assumed_pos[0];
         estimated_positions_ecef[t_idx].y[0] = assumed_pos[1];
         estimated_positions_ecef[t_idx].z[0] = assumed_pos[2];
-        printf("Estimated position at epoch %u: (%.3f, %.3f, %.3f)\n",
-               epoch_time, assumed_pos[0], assumed_pos[1], assumed_pos[2]);
+        // printf("Estimated position at epoch %u: (%.3f, %.3f, %.3f)\n",
+        //        epoch_time, assumed_pos[0], assumed_pos[1], assumed_pos[2]);
+
+        double lat_deg, lon_deg, alt_m;
+        ecef_to_geodetic(assumed_pos[0], assumed_pos[1], assumed_pos[2],
+                         &lat_deg, &lon_deg, &alt_m);
+
+        latlonalt_positions[t_idx].lat[0] = lat_deg;
+        latlonalt_positions[t_idx].lon[0] = lon_deg;
+        latlonalt_positions[t_idx].alt[0] = alt_m;
+
+        printf("Lat/Long at epoch %u: (%.8f, %.8f)\n",
+               epoch_time, lat_deg, lon_deg);
     }
 
     return 0;

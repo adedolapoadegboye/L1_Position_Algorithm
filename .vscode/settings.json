@@ -31,6 +31,7 @@
         "iodc",
         "iode",
         "iods",
+        "latlonalt",
         "periapsis",
         "Perifocal",
         "Raphson"

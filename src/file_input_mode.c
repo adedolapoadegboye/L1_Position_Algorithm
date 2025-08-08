@@ -17,8 +17,6 @@
 #include "../include/algo.h"
 #include "../include/df_parser.h"
 #include "../include/rtcm_reader.h"
-#include "../include/geo_utils.h"
-#include "../include/position_solver.h"
 #include "../include/satellites.h"
 #include "../include/receiver.h"
 
@@ -104,7 +102,7 @@ int file_input_mode(bool is_parsed)
         printf(COLOR_GREEN "Successfully estimated satellite orbits in ECI.\n" COLOR_RESET);
     }
 
-    // Step 6: Estimate receiver position in ECEF coordinates using least squares
+    // Step 6: Estimate receiver position in ECEF coordinates using least squares then convert to geodetic coordinates
     int position_status = estimate_receiver_positions();
     if (position_status != 0)
     {

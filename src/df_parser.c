@@ -90,6 +90,22 @@ int parse_rtcm_1019(const char *line, rtcm_1019_ephemeris_t *eph)
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * @brief Computes the pseudorange from the given parameters.
+ *
+ * This function calculates the pseudorange using the formula:
+ * Pseudorange = c * (integer_ms * 1e-3 + mod1s_sec + fine_sec)
+ *
+ * @param integer_ms Rough range integer in milliseconds.
+ * @param mod1s_sec Pseudorange modulo 1 second.
+ * @param fine_sec Pseudorange residuals in seconds scaled by speed of light.
+ * @return The computed pseudorange in meters.
+ */
+double compute_pseudorange(uint32_t integer_ms, double mod1s_sec, double fine_sec)
+{
+    return SPEED_OF_LIGHT * (integer_ms * 1e-3) + mod1s_sec + fine_sec;
+}
+
+/**
  * @brief Parses a single RTCM 1074 MSM4 line into a structured observation object.
  *
  * This function extracts the MSM4 header and all per-cell data (pseudorange,

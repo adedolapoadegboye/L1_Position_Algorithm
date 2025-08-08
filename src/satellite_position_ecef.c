@@ -10,8 +10,6 @@
 #include "../include/algo.h"
 #include "../include/df_parser.h"
 #include "../include/rtcm_reader.h"
-#include "../include/geo_utils.h"
-#include "../include/position_solver.h"
 #include "../include/df_parser.h"
 #include "../include/satellites.h"
 

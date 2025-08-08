@@ -21,6 +21,9 @@
 /// Maximum number of satellites to store in ephemeris history
 #define MAX_EPH_HISTORY 1000
 
+// Speed of light in meters per second
+#define SPEED_OF_LIGHT 299792458.0
+
 /**
  * @brief Utility macro to extract a field from a line by DF label.
  *
