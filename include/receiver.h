@@ -16,6 +16,6 @@ typedef struct
 
 extern estimated_position_t estimated_positions_ecef[MAX_SAT + 1];
 
-int estimate_receiver_positions(const gps_satellite_data_t gps_list[MAX_SAT + 1], const sat_ecef_history_t sat_ecef_positions[MAX_SAT + 1]);
+int estimate_receiver_positions(void);
 
 #endif // RECEIVER_H

@@ -50,10 +50,10 @@ int satellite_position_ecef(const sat_eci_history_t sat_eci_position[MAX_SAT + 1
             sat_ecef_positions[prn].y[k] = ecef[1];
             sat_ecef_positions[prn].z[k] = ecef[2];
 
-            // printf("PRN %d, Epoch %d: PR Time (s): %.0f  Theta: %.3f rad  Rz_theta[%.3f, %.3f, %.3f] ECEF = [%.3f, %.3f, %.3f]\n",
-            //        prn, k, gps_time_sec, theta,
-            //        Rz_theta[0][0], Rz_theta[0][1], Rz_theta[0][2],
-            //        ecef[0], ecef[1], ecef[2]);
+            printf("PRN %d, Epoch %d: PR Time (s): %.0f  Theta: %.3f rad  Rz_theta[%.3f, %.3f, %.3f] ECEF = [%.3f, %.3f, %.3f]\n",
+                   prn, k, gps_time_sec, theta,
+                   Rz_theta[0][0], Rz_theta[0][1], Rz_theta[0][2],
+                   ecef[0], ecef[1], ecef[2]);
         }
     }
 

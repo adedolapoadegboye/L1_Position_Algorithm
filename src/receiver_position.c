@@ -58,10 +58,10 @@ static int collect_unique_pr_times(const gps_satellite_data_t gps_lists[MAX_SAT 
     return count;
 }
 
-int estimate_receiver_positions(const gps_satellite_data_t gps_lists[MAX_SAT + 1], const sat_ecef_history_t sat_ecef_position[MAX_SAT + 1])
+int estimate_receiver_positions(void)
 {
     uint32_t all_times[MAX_EPOCHS] = {0};
-    int n_times = collect_unique_pr_times(gps_lists, all_times);
+    int n_times = collect_unique_pr_times(gps_list, all_times);
 
     printf("Found %d unique epochs\n", n_times);
 
@@ -79,18 +79,20 @@ int estimate_receiver_positions(const gps_satellite_data_t gps_lists[MAX_SAT + 1
         {
             for (int k = 0; k < MAX_EPOCHS; k++)
             {
-                if ((gps_lists[prn].times_of_pseudorange[k] / 1000) == epoch_time)
+                if ((gps_list[prn].times_of_pseudorange[k] / 1000) == epoch_time)
                 {
                     svs[n_svs] = prn;
-                    ecefs[n_svs][0] = sat_ecef_position[prn].x[k];
-                    ecefs[n_svs][1] = sat_ecef_position[prn].y[k];
-                    ecefs[n_svs][2] = sat_ecef_position[prn].z[k];
-                    pseudoranges[n_svs] = gps_lists[prn].pseudoranges[k] / 1000;
+                    ecefs[n_svs][0] = sat_ecef_positions[prn].x[k];
+                    ecefs[n_svs][1] = sat_ecef_positions[prn].y[k];
+                    ecefs[n_svs][2] = sat_ecef_positions[prn].z[k];
+                    pseudoranges[n_svs] = gps_list[prn].pseudoranges[k];
                     n_svs++;
                     break;
                 }
             }
         }
+
+        printf("Epoch %u: %d satellites found\n", epoch_time, n_svs);
 
         if (n_svs < MIN_SATS)
         {
@@ -114,12 +116,13 @@ int estimate_receiver_positions(const gps_satellite_data_t gps_lists[MAX_SAT + 1
                     ecefs[i][0] - assumed_pos[0],
                     ecefs[i][1] - assumed_pos[1],
                     ecefs[i][2] - assumed_pos[2]};
-                double range = sqrt(los[0] * los[0] + los[1] * los[1] + los[2] * los[2]);
+                double range = sqrt((los[0] * los[0]) + (los[1] * los[1]) + (los[2] * los[2]));
                 assumed_ranges[i] = range;
                 unit_vectors[i][0] = los[0] / range;
                 unit_vectors[i][1] = los[1] / range;
                 unit_vectors[i][2] = los[2] / range;
                 delta_tau[i] = pseudoranges[i] - range - clock_bias;
+                // printf("Satellite %d: LOS=(%f, %f, %f), Pseudorange= %f, Range=%f, Delta Tau=%f\n", svs[i], los[0], los[1], los[2], pseudoranges[i], range, delta_tau[i]);
             }
 
             // Build geometry matrix (n_svs x 4)

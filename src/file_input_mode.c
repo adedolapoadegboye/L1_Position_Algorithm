@@ -105,7 +105,7 @@ int file_input_mode(bool is_parsed)
     }
 
     // Step 6: Estimate receiver position in ECEF coordinates using least squares
-    int position_status = estimate_receiver_positions(gps_list, sat_ecef_positions);
+    int position_status = estimate_receiver_positions();
     if (position_status != 0)
     {
         fprintf(stderr, COLOR_RED "Error: Failed to estimate receiver position.\n" COLOR_RESET);
