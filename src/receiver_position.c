@@ -58,6 +58,139 @@ static int collect_unique_pr_times(const gps_satellite_data_t gps_lists[MAX_SAT 
     return count;
 }
 
+static int invert_4x4(const double A[4][4], double inv[4][4])
+{
+    // Build augmented [A | I]
+    double aug[4][8];
+    for (int r = 0; r < 4; ++r)
+    {
+        for (int c = 0; c < 4; ++c)
+            aug[r][c] = A[r][c];
+        for (int c = 0; c < 4; ++c)
+            aug[r][4 + c] = (r == c) ? 1.0 : 0.0;
+    }
+
+    // Gauss-Jordan elimination with partial pivoting
+    for (int col = 0; col < 4; ++col)
+    {
+        // Pivot: find row with max |aug[r][col]| for r >= col
+        int piv = col;
+        double maxabs = fabs(aug[piv][col]);
+        for (int r = col + 1; r < 4; ++r)
+        {
+            double v = fabs(aug[r][col]);
+            if (v > maxabs)
+            {
+                maxabs = v;
+                piv = r;
+            }
+        }
+        // Singular/ill-conditioned check
+        if (maxabs <= 1e-15)
+            return 0;
+
+        // Swap current row with pivot row
+        if (piv != col)
+        {
+            for (int c = 0; c < 8; ++c)
+            {
+                double tmp = aug[col][c];
+                aug[col][c] = aug[piv][c];
+                aug[piv][c] = tmp;
+            }
+        }
+
+        // Normalize pivot row
+        double pivval = aug[col][col];
+        double invpiv = 1.0 / pivval;
+        for (int c = 0; c < 8; ++c)
+            aug[col][c] *= invpiv;
+
+        // Eliminate this column from other rows
+        for (int r = 0; r < 4; ++r)
+        {
+            if (r == col)
+                continue;
+            double factor = aug[r][col];
+            if (factor != 0.0)
+            {
+                for (int c = 0; c < 8; ++c)
+                {
+                    aug[r][c] -= factor * aug[col][c];
+                }
+            }
+        }
+    }
+
+    // Extract inverse from augmented matrix
+    for (int r = 0; r < 4; ++r)
+        for (int c = 0; c < 4; ++c)
+            inv[r][c] = aug[r][4 + c];
+
+    return 1;
+}
+
+static void mat_transpose(int rows, int cols, const double A[rows][cols], double AT[cols][rows])
+{
+    for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++)
+            AT[j][i] = A[i][j];
+}
+
+// Multiply: C = A (m×p) * B (p×n)
+static void mat_mult(int m, int p, int n, const double A[m][p], const double B[p][n], double C[m][n])
+{
+    for (int i = 0; i < m; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            C[i][j] = 0.0;
+            for (int k = 0; k < p; k++)
+                C[i][j] += A[i][k] * B[k][j];
+        }
+    }
+}
+
+// Multiply matrix (m×n) by vector (n)
+static void mat_vec_mult(int m, int n, const double A[m][n], const double v[n], double out[m])
+{
+    for (int i = 0; i < m; i++)
+    {
+        out[i] = 0.0;
+        for (int j = 0; j < n; j++)
+            out[i] += A[i][j] * v[j];
+    }
+}
+
+// --- Minimal SVD pseudoinverse ---
+// This is a *very* stripped-down numerical method, fine for small (<= 12×4) matrices.
+// For production use, replace with LAPACK's dgesvd or similar.
+
+static void pinv_svd(int m, int n, double A[m][n], double pinv[n][m])
+{
+    // This is just a placeholder — in your project, call a small SVD routine
+    // or link to LAPACK to get U, S, V^T and invert singular values > tol.
+
+    // For now, use normal equations: pinv(A) = (AᵀA)⁻¹ Aᵀ
+    double AT[n][m];
+    mat_transpose(m, n, A, AT);
+
+    double ATA[n][n];
+    mat_mult(n, m, n, AT, A, ATA);
+
+    // Invert ATA (n×n) — here n=4 always
+    double invATA[4][4];
+    invert_4x4(ATA, invATA); // implement your existing 4×4 inversion
+
+    double tmp[n][m];
+    mat_mult(n, n, m, invATA, AT, tmp);
+
+    // Copy to pinv
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
+            pinv[i][j] = tmp[i][j];
+}
+
 int estimate_receiver_positions(void)
 {
     uint32_t all_times[MAX_EPOCHS] = {0};
@@ -69,7 +202,6 @@ int estimate_receiver_positions(void)
     {
         uint32_t epoch_time = all_times[t_idx];
 
-        // Gather satellites with data at this epoch
         int svs[MAX_SAT];
         double ecefs[MAX_SAT][3];
         double pseudoranges[MAX_SAT];
@@ -92,15 +224,9 @@ int estimate_receiver_positions(void)
             }
         }
 
-        printf("Epoch %u: %d satellites found\n", epoch_time, n_svs);
-
         if (n_svs < MIN_SATS)
-        {
-            printf("Not enough satellites for epoch %u: %d satellites found\n", epoch_time, n_svs);
             continue;
-        }
 
-        // Newton-Raphson iterations
         double assumed_pos[3] = {0, 0, 0};
         double clock_bias = 0;
 
@@ -116,16 +242,14 @@ int estimate_receiver_positions(void)
                     ecefs[i][0] - assumed_pos[0],
                     ecefs[i][1] - assumed_pos[1],
                     ecefs[i][2] - assumed_pos[2]};
-                double range = sqrt((los[0] * los[0]) + (los[1] * los[1]) + (los[2] * los[2]));
+                double range = sqrt(los[0] * los[0] + los[1] * los[1] + los[2] * los[2]);
                 assumed_ranges[i] = range;
                 unit_vectors[i][0] = los[0] / range;
                 unit_vectors[i][1] = los[1] / range;
                 unit_vectors[i][2] = los[2] / range;
                 delta_tau[i] = pseudoranges[i] - range - clock_bias;
-                // printf("Satellite %d: LOS=(%f, %f, %f), Pseudorange= %f, Range=%f, Delta Tau=%f\n", svs[i], los[0], los[1], los[2], pseudoranges[i], range, delta_tau[i]);
             }
 
-            // Build geometry matrix (n_svs x 4)
             double G[MAX_SAT][4];
             for (int i = 0; i < n_svs; i++)
             {
@@ -135,53 +259,23 @@ int estimate_receiver_positions(void)
                 G[i][3] = 1.0;
             }
 
-            // Least squares solution: dx = (G^T G)^-1 G^T delta_tau
-            // For small n_svs (4-12), you can use normal equations directly
-            // Here, we use a simple approach for 4 satellites (no pseudo-inverse)
-            // For more satellites, use a linear algebra library
+            double Gpinv[4][MAX_SAT];
+            pinv_svd(n_svs, 4, G, Gpinv); // shape: 4×n_svs
 
-            // Compute G^T G (4x4) and G^T delta_tau (4x1)
-            double GTG[4][4] = {0};
-            double GTd[4] = {0};
-            for (int i = 0; i < 4; i++)
-            {
-                for (int j = 0; j < 4; j++)
-                {
-                    for (int k = 0; k < n_svs; k++)
-                    {
-                        GTG[i][j] += G[k][i] * G[k][j];
-                    }
-                }
-                for (int k = 0; k < n_svs; k++)
-                {
-                    GTd[i] += G[k][i] * delta_tau[k];
-                }
-            }
+            double delta_pos_time[4];
+            mat_vec_mult(4, n_svs, Gpinv, delta_tau, delta_pos_time);
 
-            // Solve GTG * dx = GTd (4x4 system)
-            // For simplicity, use Cramer's rule or a small matrix solver
-            // Here, we assume n_svs == 4 and use a simple solver (replace with LAPACK or similar for robustness)
-            // ... (implement a 4x4 linear solver here, or use a library) ...
-
-            // For demonstration, let's just update the position with a small step in the direction of the average unit vector
-            // (Replace this with a real least-squares solver for production)
-            for (int i = 0; i < 3; i++)
-            {
-                double avg = 0;
-                for (int j = 0; j < n_svs; j++)
-                    avg += unit_vectors[j][i];
-                avg /= n_svs;
-                assumed_pos[i] += 0.1 * avg; // Small step
-            }
-            clock_bias += 0.1; // Dummy update
+            assumed_pos[0] += delta_pos_time[0];
+            assumed_pos[1] += delta_pos_time[1];
+            assumed_pos[2] += delta_pos_time[2];
+            clock_bias += delta_pos_time[3];
         }
 
-        // Save estimated position for this epoch
         estimated_positions_ecef[t_idx].x[0] = assumed_pos[0];
         estimated_positions_ecef[t_idx].y[0] = assumed_pos[1];
         estimated_positions_ecef[t_idx].z[0] = assumed_pos[2];
-
-        printf("Estimated position at epoch %u: (%f, %f, %f)\n", epoch_time, assumed_pos[0], assumed_pos[1], assumed_pos[2]);
+        printf("Estimated position at epoch %u: (%.3f, %.3f, %.3f)\n",
+               epoch_time, assumed_pos[0], assumed_pos[1], assumed_pos[2]);
     }
 
     return 0;
