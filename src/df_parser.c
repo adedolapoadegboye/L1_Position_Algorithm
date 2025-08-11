@@ -104,7 +104,7 @@ int parse_rtcm_1002(const char *line, rtcm_1002_msm1_t *msm1)
         // Calculate full pseudorange
         msm1->pseudoranges[i] = compute_pseudorange_msm1(msm1->ambiguities[i], msm1->remainders[i]);
     }
-    print_msm1(msm1); // quick debug print
+    // print_msm1(msm1); // quick debug print
     return 0;
 }
 
@@ -281,7 +281,7 @@ int parse_rtcm_1074(const char *line, rtcm_1074_msm4_t *msm4)
         }
     }
 
-    print_msm4(msm4); // quick debug print
+    // print_msm4(msm4); // quick debug print
 
     return 0;
 }
@@ -344,7 +344,7 @@ int parse_rtcm_1019(const char *line, rtcm_1019_ephemeris_t *eph)
     EXTRACT("DF103", "%hhu", &eph->gps_l2p_data_flag);
     EXTRACT("DF137", "%hu", &eph->gps_wn);
     eph->time_since_epoch = (eph->week_number * 604800) + eph->time_of_week;
-    print_ephemeris(eph); // quick debug print
+    // print_ephemeris(eph); // quick debug print
 
     return 0;
 }
@@ -580,69 +580,4 @@ int store_pseudorange_msm1(const rtcm_1002_msm1_t *new_msm1)
     }
 
     return 0;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * @brief Prints the stored pseudoranges for all satellites.
- * This function iterates through the global pseudorange table
- * and prints the details for each satellite that has valid ephemeris data.
- */
-void print_all_stored_pseudoranges(void)
-{
-    for (int prn = 1; prn <= MAX_SAT; prn++)
-    {
-        if (pseudorange_count[prn] == 0)
-            continue;
-
-        printf("\n========== PRN %d ==========\n", prn);
-        printf("%-8s | %-18s\n", "Epoch", "Pseudorange (m)");
-        printf("---------+--------------------\n");
-
-        for (size_t j = 0; j < pseudorange_count[prn]; j++)
-        {
-            printf("%-8zu | %-18.3f\n", j, pseudorange_history[prn][j]);
-        }
-    }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * @brief Prints the full ephemeris history for all PRNs.
- *
- * Iterates over all PRNs and prints every stored ephemeris entry from eph_history[].
- */
-void print_all_stored_ephemeris(void)
-{
-    printf("\n========== Stored Ephemeris History ==========\n");
-
-    for (int prn = 1; prn <= MAX_SAT; prn++)
-    {
-        if (eph_history[prn].count == 0)
-            continue; // No entries for this PRN
-
-        printf("\nPRN %d: %zu entries stored\n", prn, eph_history[prn].count);
-
-        for (size_t idx = 0; idx < eph_history[prn].count; idx++)
-        {
-            const rtcm_1019_ephemeris_t *eph = &eph_history[prn].eph[idx];
-
-            printf("  [Epoch %zu]\n", idx);
-            printf("    Week Number:         %u\n", eph->week_number);
-            printf("    Time of Week:        %u s\n", eph->time_of_week);
-            printf("    Toe:                 %u s\n", eph->gps_toe);
-            printf("    Eccentricity:        %.12e\n", eph->eccentricity);
-            printf("    Semi-Major Axis:     %.3f m\n", eph->semi_major_axis);
-            printf("    Inclination:         %.12e rad\n", eph->inclination);
-            printf("    RAAN:                %.12e rad\n", eph->right_ascension_of_ascending_node);
-            printf("    Argument of Perigee: %.12e rad\n", eph->argument_of_periapsis);
-            printf("    Mean Anomaly:        %.12e rad\n", eph->mean_anomaly);
-            printf("    Omega Dot:           %.12e rad/s\n", eph->gps_omega_dot);
-            printf("    IDOT:                %.12e rad/s\n", eph->gps_idot);
-        }
-    }
-
-    printf("\n==============================================\n");
 }
