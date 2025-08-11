@@ -21,7 +21,8 @@
         "position_solver.h": "c",
         "satellites.h": "c",
         "df_parser.h": "c",
-        "rtcm_reader.h": "c"
+        "rtcm_reader.h": "c",
+        "locale": "c"
     },
     "cSpell.words": [
         "CELLPRN",

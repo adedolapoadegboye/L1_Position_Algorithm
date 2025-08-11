@@ -19,7 +19,7 @@
 #define MAX_EPOCHS 10000
 
 /// Maximum number of satellites to store in ephemeris history
-#define MAX_EPH_HISTORY 1000
+#define MAX_EPH_HISTORY 10000
 
 // Speed of light in meters per second
 #define SPEED_OF_LIGHT 299792458.0
@@ -42,6 +42,8 @@
         if (ptr)                                             \
             sscanf(ptr + strlen(field) + 1, format, target); \
     } while (0)
+
+uint8_t observation_type = 0; // Global variable to track the type of observation being processed
 
 /**
  * @brief Data structure for RTCM 1019 (GPS Ephemeris) message.
@@ -137,6 +139,31 @@ typedef struct
 } rtcm_1074_msm4_t;
 
 /**
+ * @brief Data structure for RTCM 1002 (MSM1 GPS L1) message.
+ *
+ * This structure stores the parsed contents of an MSM1 RTCM message,
+ * typically used for GPS L1 pseudorange and carrier phase measurements.
+ */
+typedef struct
+{
+    uint16_t msg_type;             ///< DF002: Message number (1074 for GPS MSM4)
+    uint16_t station_id;           ///< DF003: Reference station ID
+    uint32_t time_of_week;         ///< DF004: Epoch time in seconds of the week
+    uint8_t sync_gps_message_flag; ///< DF005: 0: No further GNSS observables, 1: Next message contains further GNSS observables from same epoch
+    uint8_t num_satellites;        ///< DF006: Number of GPS satellites used (NSat)
+    uint8_t smooth_interval_flag;  ///< DF007: Smoothing type indicator (0=divergence-free smoothing used, 1=no divergence-free smoothing used)
+    uint8_t smooth_interval;       ///< DF008: GPS Smoothing interval)
+    uint8_t svs[MAX_CELL];         ///< DF009: Sat PRN (01 - 32)
+    uint8_t sig_id[MAX_SIG];       ///< DF010: Signal ID (00 = C/A, 01 = P(Y))
+    double remainders[MAX_SAT];    ///< DF011: pseudorange (m)
+    double pseudoranges[MAX_SAT];  ///< Full Pseudorange (m)
+    double phase_pr_diff[MAX_SAT]; ///< DF012: Carrier phase range (m)
+    uint8_t lock_time[MAX_SAT];    ///< DF013: Lock time indicator
+    uint8_t ambiguities[MAX_SAT];  ///< DF014: Pseudorange modulus ambiguity
+    uint8_t cnr[MAX_SAT];          ///< DF015: Carrier-to-noise ratio (dBHz scaled)
+} rtcm_1002_msm1_t;
+
+/**
  * @brief Parses a line of RTCM 1019 text-formatted input into a structured ephemeris object.
  *
  * @param line The input line containing a text-formatted RTCM 1019 message.
@@ -153,6 +180,31 @@ int parse_rtcm_1019(const char *line, rtcm_1019_ephemeris_t *eph);
  * @return 0 on success, non-zero on failure.
  */
 int parse_rtcm_1074(const char *line, rtcm_1074_msm4_t *msm4);
+
+/**
+ * @brief Parses a line of RTCM 1002 (GPS L1) text-formatted input into a structured observation object.
+ *
+ * This function takes a single text-formatted RTCM 1002 legacy observation message line,
+ * extracts the pseudorange, carrier phase, and other related observation fields,
+ * and stores them in the provided observation structure.
+ *
+ * @param line  Pointer to the input line containing the text-formatted RTCM 1002 message.
+ * @param msm1  Pointer to the RTCM 1002 observation structure to be populated.
+ * @return 0 on success, non-zero on failure.
+ */
+int parse_rtcm_1002(const char *line, rtcm_1002_msm1_t *msm1);
+
+/**
+ * @brief Prints the contents of a parsed RTCM 1002 (GPS L1) legacy observation structure.
+ *
+ * This function outputs the stored pseudorange, carrier phase, and related
+ * observation fields from the provided RTCM 1002 structure in a human-readable
+ * format, useful for debugging and verification.
+ *
+ * @param msm1 Pointer to the RTCM 1002 observation structure to print.
+ */
+void print_msm1(const rtcm_1002_msm1_t *msm1);
+
 /**
  * @brief Prints the contents of a parsed RTCM 1074 MSM4 observation structure.
  *
@@ -186,11 +238,29 @@ void print_ephemeris(const rtcm_1019_ephemeris_t *eph);
  */
 double compute_pseudorange(uint32_t integer_ms, double mod1s_sec, double fine_sec);
 
+/**
+ * @brief Computes the pseudorange for an RTCM 1002 (MSM1) observation.
+ *
+ * Calculates the pseudorange by combining the rough range integer (in milliseconds)
+ * with the pseudorange remainder (in seconds), applying the appropriate speed-of-light
+ * scaling to the integer term.
+ *
+ * Formula:
+ *    pseudorange = (amb * 299792.458) + rem
+ *
+ * @param amb Rough range integer in milliseconds.
+ * @param rem Pseudorange remainder in seconds.
+ * @return Pseudorange in meters.
+ */
+double compute_pseudorange_msm1(double amb, double rem);
+
 // Pseudorange history: [PRN][epoch]
 
 int store_ephemeris(const rtcm_1019_ephemeris_t *new_eph);
 int store_msm4(const rtcm_1074_msm4_t *new_msm4);
+int store_msm1(const rtcm_1002_msm1_t *new_msm1);
 int store_pseudorange(const rtcm_1074_msm4_t *msm4);
+int store_pseudorange_msm1(const rtcm_1002_msm1_t *msm1);
 void print_all_stored_ephemeris(void);
 
 typedef struct

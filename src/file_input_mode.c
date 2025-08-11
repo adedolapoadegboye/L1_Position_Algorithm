@@ -3,7 +3,7 @@
  * @brief Handles RTCM MSM4 file input, step-by-step parsing and position resolution.
  *
  * This function is triggered when the user selects "File Input" from the application menu.
- * It opens a pre-recorded RTCM file (text or binary), reads each epoch's MSM4 message,
+ * It opens a pre-recorded RTCM file (text or binary), reads each epoch's MSM4 message(s),
  * extracts relevant GNSS observations, and calculates the receiver position using
  * the least squares method.
  *
@@ -20,17 +20,19 @@
 #include "../include/satellites.h"
 #include "../include/receiver.h"
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
  * @brief Main loop for processing a recorded RTCM input file.
  *
- * This function opens the specified RTCM file and iteratively processes each epoch
+ * This function opens the specified RTCM file and iteratively processes epochs
  * by reading and parsing supported RTCM messages (e.g., MSM4). It prepares the
- * observation data and, in future steps, will apply a least squares solver and
- * convert to geodetic coordinates.
+ * observation data and then runs the solver and coordinate conversions.
  *
  * @param is_parsed Set to true if the file is in pre-parsed (text) format.
- * @return 0 on success, 1 if file open failed or processing error occurred.
+ * @return 0 on success, 1 on error (open, read, sort, position, etc.).
  */
+
 int file_input_mode(bool is_parsed)
 {
     // Step 1: Attempt to open the RTCM file

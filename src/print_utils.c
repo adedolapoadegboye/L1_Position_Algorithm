@@ -14,6 +14,8 @@
 #include "../include/algo.h"
 #include "../include/df_parser.h"
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
  * @brief Prints the contents of a parsed RTCM 1019 ephemeris structure.
  *
@@ -68,6 +70,84 @@ void print_ephemeris(const rtcm_1019_ephemeris_t *eph)
     printf("  Fit Interval        : %u\n", eph->gps_fit_interval);
     printf("--------------------------------------\n");
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Prints the contents of a parsed RTCM 1002 (MSM1 GPS L1) observation.
+ *
+ * Uses the provided rtcm_1002_msm1_t fields (no assumptions).
+ * For each satellite, it also computes pseudorange with compute_pseudorange_msm1()
+ * from DF014 (ambiguity, ms) and DF011 (remainder, m) and shows the stored value.
+ */
+static const char *msm1_sig_name(uint8_t sig_id)
+{
+    // DF010: 00 = C/A, 01 = P(Y). Keep simple; extend as needed.
+    switch (sig_id)
+    {
+    case 0:
+        return "C/A";
+    case 1:
+        return "P(Y)";
+    default:
+        return "Unknown";
+    }
+}
+
+void print_msm1(const rtcm_1002_msm1_t *msm1)
+{
+    if (!msm1)
+        return;
+
+    printf("\n========= RTCM 1002 (MSM1 GPS L1) =========\n");
+
+    printf("Message Type            : %u\n", msm1->msg_type);
+    printf("Station ID              : %u\n", msm1->station_id);
+    printf("GPS TOW (s)             : %u\n", msm1->time_of_week);
+    printf("Sync GNSS Msg Flag      : %u\n", msm1->sync_gps_message_flag);
+    printf("Num Satellites (NSat)   : %u\n", msm1->num_satellites);
+    printf("Smoothing Used?         : %s\n", msm1->smooth_interval_flag ? "No divergence-free smoothing" : "Divergence-free smoothing");
+    printf("Smoothing Interval (s)  : %u\n", msm1->smooth_interval);
+
+    // If any signal IDs were populated, show the distinct ones present.
+    // (Structure provides DF010 as an array; list any non-zero/known entries.)
+    bool printed_sig_header = false;
+    for (int s = 0; s < MAX_SIG; s++)
+    {
+        if (msm1->sig_id[s] || s == 0)
+        {
+            if (!printed_sig_header)
+            {
+                printf("\n-- Signal IDs Present (DF010) --\n");
+                printed_sig_header = true;
+            }
+            printf("  sig[%02d] = %u (%s)\n", s, msm1->sig_id[s], msm1_sig_name(msm1->sig_id[s]));
+        }
+    }
+
+    printf("\n-- Satellite Observations --\n");
+    printf("Idx  PRN  Amb(ms)    Rem(m)           PR(computed)         PR(stored)           Phase-PR(m)        Lock  C/N0(dBHz)\n");
+    printf("---- ---- ---------- ---------------- --------------------- --------------------- ------------------ ----- -----------\n");
+
+    for (int i = 0; i < msm1->num_satellites; i++)
+    {
+        uint8_t prn = msm1->svs[i];
+        double amb_ms = msm1->ambiguities[i]; // DF014 in ms
+        double rem_m = msm1->remainders[i];   // DF011 in m
+        double pr_comp = compute_pseudorange_msm1(amb_ms, rem_m);
+        double pr_stored = msm1->pseudoranges[i]; // already in meters
+        double phase_pr = msm1->phase_pr_diff[i]; // DF012 in meters
+        uint8_t lock = msm1->lock_time[i];        // DF013 in seconds
+        uint8_t cnr = msm1->cnr[i];               // DF015 (already scaled to dB-Hz)
+
+        printf("%-4d %-4u %-10.3f %-16.6f %-21.6f %-21.6f %-18.6f %-5u %-11u\n",
+               i + 1, prn, amb_ms, rem_m, pr_comp, pr_stored, phase_pr, lock, cnr);
+    }
+
+    printf("============================================\n");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief Prints the contents of a parsed RTCM 1074 MSM4 observation structure.

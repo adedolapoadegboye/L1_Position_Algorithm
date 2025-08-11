@@ -13,6 +13,8 @@
 #include "../include/rtcm_reader.h"
 #include "../include/df_parser.h"
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
  * @brief Reads the next valid RTCM message line from file and parses it if supported.
  *
@@ -51,14 +53,32 @@ int read_next_rtcm_message(FILE *fp)
 
         int message_type = atoi(df002_ptr + 6);
 
-        if (message_type != 1019 && message_type != 1074)
+        if (message_type != 1002 && message_type != 1019 && message_type != 1074)
         {
             fprintf(stderr, COLOR_YELLOW "Warning: Unsupported message type %d. Skipping.\n" COLOR_RESET, message_type);
             continue;
         }
 
-        if (message_type == 1019)
+        if (message_type == 1002)
         {
+            observation_type = 1; // Set observation type for MSM1
+            rtcm_1002_msm1_t msm1 = {0};
+            if (parse_rtcm_1002(line, &msm1) != 0)
+            {
+                fprintf(stderr, COLOR_YELLOW "Warning: Failed to parse RTCM 1002 message. Skipping.\n" COLOR_RESET);
+                continue;
+            }
+
+            if (store_msm1(&msm1) != 0)
+            {
+                fprintf(stderr, COLOR_YELLOW "Warning: Failed to store RTCM MSM1 data.\n" COLOR_RESET);
+            }
+            continue;
+        }
+
+        else if (message_type == 1019)
+        {
+            observation_type = 4; // Set observation type for MSM4
             rtcm_1019_ephemeris_t eph = {0};
             if (parse_rtcm_1019(line, &eph) != 0)
             {
@@ -87,12 +107,13 @@ int read_next_rtcm_message(FILE *fp)
             {
                 fprintf(stderr, COLOR_YELLOW "Warning: Failed to store MSM4 data for epoch.\n" COLOR_RESET);
             }
-            // TODO: Store or use observation data as needed
+            continue;
         }
 
         continue; // Successfully read and processed a supported message
     }
-    // print_all_stored_pseudoranges(); // debug print all stored ephemeris
+    print_all_stored_pseudoranges(); // debug print all stored pseudoranges
+    // print_all_stored_ephemeris();    // debug print all stored ephemeris
 
     return 0; // End of file or no valid message found
 }
