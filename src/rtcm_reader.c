@@ -78,7 +78,6 @@ int read_next_rtcm_message(FILE *fp)
 
         else if (message_type == 1019)
         {
-            observation_type = 4; // Set observation type for MSM4
             rtcm_1019_ephemeris_t eph = {0};
             if (parse_rtcm_1019(line, &eph) != 0)
             {
@@ -96,6 +95,7 @@ int read_next_rtcm_message(FILE *fp)
 
         else if (message_type == 1074)
         {
+            observation_type = 4; // Set observation type for MSM4
             rtcm_1074_msm4_t msm4 = {0};
             if (parse_rtcm_1074(line, &msm4) != 0)
             {
@@ -112,8 +112,8 @@ int read_next_rtcm_message(FILE *fp)
 
         continue; // Successfully read and processed a supported message
     }
-    print_all_stored_pseudoranges(); // debug print all stored pseudoranges
-    // print_all_stored_ephemeris();    // debug print all stored ephemeris
+    // print_all_stored_pseudoranges(); // debug print all stored pseudoranges
+    // print_all_stored_ephemeris(); // debug print all stored ephemeris
 
     return 0; // End of file or no valid message found
 }

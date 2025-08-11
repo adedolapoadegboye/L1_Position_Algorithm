@@ -102,7 +102,6 @@ void print_msm1(const rtcm_1002_msm1_t *msm1)
     printf("\n========= RTCM 1002 (MSM1 GPS L1) =========\n");
 
     printf("Message Type            : %u\n", msm1->msg_type);
-    printf("Station ID              : %u\n", msm1->station_id);
     printf("GPS TOW (s)             : %u\n", msm1->time_of_week);
     printf("Sync GNSS Msg Flag      : %u\n", msm1->sync_gps_message_flag);
     printf("Num Satellites (NSat)   : %u\n", msm1->num_satellites);

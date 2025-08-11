@@ -25,6 +25,7 @@ size_t pseudorange_count[MAX_SAT + 1] = {0};
 rtcm_1002_msm1_t msm1_history[MAX_SAT + 1][MAX_EPOCHS] = {{{0}}};
 rtcm_1074_msm4_t msm4_history[MAX_SAT + 1][MAX_EPOCHS] = {{{0}}};
 rtcm_1019_ephemeris_t eph_table[MAX_SAT + 1] = {{0}};
+uint8_t observation_type = 0;
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -46,6 +47,7 @@ int parse_rtcm_1002(const char *line, rtcm_1002_msm1_t *msm1)
     EXTRACT("DF002", "%hu", &msm1->msg_type);
     EXTRACT("DF003", "%hu", &msm1->station_id);
     EXTRACT("DF004", "%u", &msm1->time_of_week);
+    msm1->time_of_week = msm1->time_of_week / 1000;
     EXTRACT("DF005", "%hhu", &msm1->sync_gps_message_flag);
     EXTRACT("DF006", "%hhu", &msm1->num_satellites);
     EXTRACT("DF007", "%hhu", &msm1->smooth_interval_flag);
@@ -322,7 +324,7 @@ int parse_rtcm_1019(const char *line, rtcm_1019_ephemeris_t *eph)
     eph->mean_anomaly = eph->gps_m0 * PI;
     EXTRACT("DF089", "%lf", &eph->gps_cuc);
     EXTRACT("DF090", "%lf", &eph->gps_eccentricity);
-    eph->eccentricity = eph->gps_eccentricity * 2e-33;
+    eph->eccentricity = eph->gps_eccentricity * pow(2, -33);
     EXTRACT("DF091", "%lf", &eph->gps_cus);
     EXTRACT("DF092", "%lf", &eph->gps_sqrt_a);
     eph->semi_major_axis = eph->gps_sqrt_a * eph->gps_sqrt_a;
@@ -385,7 +387,7 @@ double compute_pseudorange_msm1(double amb, double rem)
     double amb_meters = amb * (SPEED_OF_LIGHT / 1000.0);
 
     // Sum with remainder to get full pseudorange
-    return amb_meters + rem;
+    return (double)(amb_meters + rem);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -603,4 +605,44 @@ void print_all_stored_pseudoranges(void)
             printf("%-8zu | %-18.3f\n", j, pseudorange_history[prn][j]);
         }
     }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Prints the full ephemeris history for all PRNs.
+ *
+ * Iterates over all PRNs and prints every stored ephemeris entry from eph_history[].
+ */
+void print_all_stored_ephemeris(void)
+{
+    printf("\n========== Stored Ephemeris History ==========\n");
+
+    for (int prn = 1; prn <= MAX_SAT; prn++)
+    {
+        if (eph_history[prn].count == 0)
+            continue; // No entries for this PRN
+
+        printf("\nPRN %d: %zu entries stored\n", prn, eph_history[prn].count);
+
+        for (size_t idx = 0; idx < eph_history[prn].count; idx++)
+        {
+            const rtcm_1019_ephemeris_t *eph = &eph_history[prn].eph[idx];
+
+            printf("  [Epoch %zu]\n", idx);
+            printf("    Week Number:         %u\n", eph->week_number);
+            printf("    Time of Week:        %u s\n", eph->time_of_week);
+            printf("    Toe:                 %u s\n", eph->gps_toe);
+            printf("    Eccentricity:        %.12e\n", eph->eccentricity);
+            printf("    Semi-Major Axis:     %.3f m\n", eph->semi_major_axis);
+            printf("    Inclination:         %.12e rad\n", eph->inclination);
+            printf("    RAAN:                %.12e rad\n", eph->right_ascension_of_ascending_node);
+            printf("    Argument of Perigee: %.12e rad\n", eph->argument_of_periapsis);
+            printf("    Mean Anomaly:        %.12e rad\n", eph->mean_anomaly);
+            printf("    Omega Dot:           %.12e rad/s\n", eph->gps_omega_dot);
+            printf("    IDOT:                %.12e rad/s\n", eph->gps_idot);
+        }
+    }
+
+    printf("\n==============================================\n");
 }

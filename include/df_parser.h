@@ -43,7 +43,7 @@
             sscanf(ptr + strlen(field) + 1, format, target); \
     } while (0)
 
-uint8_t observation_type = 0; // Global variable to track the type of observation being processed
+uint8_t observation_type; // Global variable to track the type of observation being processed
 
 /**
  * @brief Data structure for RTCM 1019 (GPS Ephemeris) message.
@@ -262,6 +262,7 @@ int store_msm1(const rtcm_1002_msm1_t *new_msm1);
 int store_pseudorange(const rtcm_1074_msm4_t *msm4);
 int store_pseudorange_msm1(const rtcm_1002_msm1_t *msm1);
 void print_all_stored_ephemeris(void);
+void print_all_stored_pseudoranges(void);
 
 typedef struct
 {
