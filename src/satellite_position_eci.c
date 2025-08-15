@@ -162,11 +162,11 @@ int satellite_position_eci(const gps_satellite_data_t gps_lists[])
             mat3x3_vec3_mult(Rz_Omega, tmp2, eci);
 
             // Save
-            sat_eci_positions[prn].x[k] = eci[0] / 1000.0;
-            sat_eci_positions[prn].y[k] = eci[1] / 1000.0;
-            sat_eci_positions[prn].z[k] = eci[2] / 1000.0;
+            sat_eci_positions[prn].x[k] = eci[0];
+            sat_eci_positions[prn].y[k] = eci[1];
+            sat_eci_positions[prn].z[k] = eci[2];
 
-            printf("PRN %d, Epoch %d: ECI = [%.3f, %.3f, %.3f]\n", prn, k, sat_eci_positions[prn].x[k], sat_eci_positions[prn].y[k], sat_eci_positions[prn].z[k]);
+            // printf("PRN %d, Epoch %d: ECI = [%.3f, %.3f, %.3f]\n", prn, k, sat_eci_positions[prn].x[k]/1000, sat_eci_positions[prn].y[k]/1000, sat_eci_positions[prn].z[k]/1000);
         }
     }
     return 0;
