@@ -47,7 +47,7 @@ int read_next_rtcm_message(FILE *fp)
         char *df002_ptr = strstr(line, "DF002=");
         if (!df002_ptr)
         {
-            fprintf(stderr, COLOR_YELLOW "Warning: DF002 not found in message. Skipping.\n" COLOR_RESET);
+            // fprintf(stderr, COLOR_YELLOW "Warning: DF002 not found in mess\age. Skipping.\n" COLOR_RESET);
             continue;
         }
 
@@ -55,7 +55,7 @@ int read_next_rtcm_message(FILE *fp)
 
         if (message_type != 1002 && message_type != 1019 && message_type != 1074)
         {
-            fprintf(stderr, COLOR_YELLOW "Warning: Unsupported message type %d. Skipping.\n" COLOR_RESET, message_type);
+            // fprintf(stderr, COLOR_YELLOW "Warning: Unsupported message type %d. Skipping.\n" COLOR_RESET, message_type);
             continue;
         }
 
@@ -65,13 +65,13 @@ int read_next_rtcm_message(FILE *fp)
             rtcm_1002_msm1_t msm1 = {0};
             if (parse_rtcm_1002(line, &msm1) != 0)
             {
-                fprintf(stderr, COLOR_YELLOW "Warning: Failed to parse RTCM 1002 message. Skipping.\n" COLOR_RESET);
+                // fprintf(stderr, COLOR_YELLOW "Warning: Failed to parse RTCM 1002 message. Skipping.\n" COLOR_RESET);
                 continue;
             }
 
             if (store_msm1(&msm1) != 0)
             {
-                fprintf(stderr, COLOR_YELLOW "Warning: Failed to store RTCM MSM1 data.\n" COLOR_RESET);
+                // fprintf(stderr, COLOR_YELLOW "Warning: Failed to store RTCM MSM1 data.\n" COLOR_RESET);
             }
             continue;
         }
@@ -87,7 +87,7 @@ int read_next_rtcm_message(FILE *fp)
 
             if (store_ephemeris(&eph) != 0)
             {
-                fprintf(stderr, COLOR_YELLOW "Warning: Failed to store/update ephemeris for PRN %d\n" COLOR_RESET, eph.satellite_id);
+                // fprintf(stderr, COLOR_YELLOW "Warning: Failed to store/update ephemeris for PRN %d\n" COLOR_RESET, eph.satellite_id);
             }
 
             continue;
@@ -99,13 +99,13 @@ int read_next_rtcm_message(FILE *fp)
             rtcm_1074_msm4_t msm4 = {0};
             if (parse_rtcm_1074(line, &msm4) != 0)
             {
-                fprintf(stderr, COLOR_YELLOW "Warning: Failed to parse RTCM 1074 message. Skipping.\n" COLOR_RESET);
+                // fprintf(stderr, COLOR_YELLOW "Warning: Failed to parse RTCM 1074 message. Skipping.\n" COLOR_RESET);
                 continue;
             }
 
             if (store_msm4(&msm4) != 0)
             {
-                fprintf(stderr, COLOR_YELLOW "Warning: Failed to store MSM4 data for epoch.\n" COLOR_RESET);
+                // fprintf(stderr, COLOR_YELLOW "Warning: Failed to store MSM4 data for epoch.\n" COLOR_RESET);
             }
             continue;
         }

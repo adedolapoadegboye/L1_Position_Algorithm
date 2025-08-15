@@ -313,7 +313,6 @@ int parse_rtcm_1019(const char *line, rtcm_1019_ephemeris_t *eph)
     EXTRACT("DF079", "%lf", &eph->gps_idot);
     EXTRACT("DF071", "%hu", &eph->gps_iode);
     EXTRACT("DF081", "%u", &eph->gps_toc);
-    eph->time_of_week = eph->gps_toc;
     EXTRACT("DF082", "%lf", &eph->gps_af2);
     EXTRACT("DF083", "%lf", &eph->gps_af1);
     EXTRACT("DF084", "%lf", &eph->gps_af0);
@@ -329,6 +328,7 @@ int parse_rtcm_1019(const char *line, rtcm_1019_ephemeris_t *eph)
     EXTRACT("DF092", "%lf", &eph->gps_sqrt_a);
     eph->semi_major_axis = eph->gps_sqrt_a * eph->gps_sqrt_a;
     EXTRACT("DF093", "%u", &eph->gps_toe);
+    eph->time_of_week = eph->gps_toe;
     EXTRACT("DF094", "%lf", &eph->gps_cic);
     EXTRACT("DF095", "%lf", &eph->gps_omega0);
     eph->right_ascension_of_ascending_node = eph->gps_omega0 * PI;
@@ -414,11 +414,11 @@ int store_ephemeris(const rtcm_1019_ephemeris_t *new_eph)
     if (idx < MAX_EPH_HISTORY)
     {
         eph_history[prn].eph[idx] = *new_eph;
-        printf(COLOR_GREEN "Stored ephemeris for PRN %u at idx %zu\n" COLOR_RESET, prn, idx);
+        // printf(COLOR_GREEN "Stored ephemeris for PRN %u at idx %zu\n" COLOR_RESET, prn, idx);
     }
     else
     {
-        printf(COLOR_RED "Warning: Ephemeris history for PRN %u exceeded max entries (%d). Data may be lost.\n" COLOR_RESET, prn, MAX_EPH_HISTORY);
+        // printf(COLOR_RED "Warning: Ephemeris history for PRN %u exceeded max entries (%d). Data may be lost.\n" COLOR_RESET, prn, MAX_EPH_HISTORY);
     }
 
     // Optionally update eph_table[prn] and eph_available[prn] for legacy code
@@ -456,9 +456,9 @@ int store_msm4(const rtcm_1074_msm4_t *new_msm4)
         }
         else
         {
-            printf(COLOR_RED "Warning: MSM4 history for PRN %u exceeded max epochs (%d). Data may be lost.\n" COLOR_RESET, prn, MAX_EPOCHS);
+            // printf(COLOR_RED "Warning: MSM4 history for PRN %u exceeded max epochs (%d). Data may be lost.\n" COLOR_RESET, prn, MAX_EPOCHS);
         }
-        printf(COLOR_GREEN "Stored MSM4 for PRN %u at epoch %zu\n" COLOR_RESET, prn, epoch_idx);
+        // printf(COLOR_GREEN "Stored MSM4 for PRN %u at epoch %zu\n" COLOR_RESET, prn, epoch_idx);
     }
     return 0;
 }
@@ -492,12 +492,12 @@ int store_msm1(const rtcm_1002_msm1_t *new_msm1)
         }
         else
         {
-            printf(COLOR_RED
-                   "Warning: MSM1 history for PRN %u exceeded max epochs (%d). Data may be lost.\n" COLOR_RESET,
-                   prn, MAX_EPOCHS);
+            // printf(COLOR_RED
+            //        "Warning: MSM1 history for PRN %u exceeded max epochs (%d). Data may be lost.\n" COLOR_RESET,
+            //        prn, MAX_EPOCHS);
         }
 
-        printf(COLOR_GREEN "Stored MSM1 for PRN %u at epoch %zu\n" COLOR_RESET, prn, epoch_idx);
+        // printf(COLOR_GREEN "Stored MSM1 for PRN %u at epoch %zu\n" COLOR_RESET, prn, epoch_idx);
     }
 
     return 0;
@@ -531,9 +531,9 @@ int store_pseudorange(const rtcm_1074_msm4_t *new_msm4)
         }
         else
         {
-            printf(COLOR_RED "Warning: Pseudorange history for PRN %u exceeded max epochs (%d). Data may be lost.\n" COLOR_RESET, prn, MAX_EPOCHS);
+            // printf(COLOR_RED "Warning: Pseudorange history for PRN %u exceeded max epochs (%d). Data may be lost.\n" COLOR_RESET, prn, MAX_EPOCHS);
         }
-        printf(COLOR_GREEN "Stored pseudorange for PRN %u at epoch %zu : %.12f\n" COLOR_RESET, prn, epoch_idx, new_msm4->pseudorange[i]);
+        // printf(COLOR_GREEN "Stored pseudorange for PRN %u at epoch %zu : %.12f\n" COLOR_RESET, prn, epoch_idx, new_msm4->pseudorange[i]);
     }
     return 0;
 }
@@ -571,12 +571,12 @@ int store_pseudorange_msm1(const rtcm_1002_msm1_t *new_msm1)
         }
         else
         {
-            printf(COLOR_RED
-                   "Warning: Pseudorange history for PRN %u exceeded max epochs (%d). Data may be lost.\n" COLOR_RESET,
-                   prn, MAX_EPOCHS);
+            // printf(COLOR_RED
+            //        "Warning: Pseudorange history for PRN %u exceeded max epochs (%d). Data may be lost.\n" COLOR_RESET,
+            //        prn, MAX_EPOCHS);
         }
 
-        printf(COLOR_GREEN "Stored MSM1 pseudorange for PRN %u at epoch %zu : %.12f\n" COLOR_RESET, prn, epoch_idx, pr);
+        // printf(COLOR_GREEN "Stored MSM1 pseudorange for PRN %u at epoch %zu : %.12f\n" COLOR_RESET, prn, epoch_idx, pr);
     }
 
     return 0;

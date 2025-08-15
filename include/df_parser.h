@@ -64,7 +64,6 @@ typedef struct
     double gps_idot;                          ///< DF079: GPS IDOT
     uint16_t gps_iode;                        ///< DF071 GPS IODE
     uint32_t gps_toc;                         ///< DF081: GPS time of clock (s of GPS week)
-    uint32_t time_of_week;                    ///< DF081 unscaled: Time of week = gps_toc
     double gps_af2;                           ///< DF082: Polynomial clock drift coefficient (s/s^2)
     double gps_af1;                           ///< DF083: Polynomial clock drift coefficient (s/s)
     double gps_af0;                           ///< DF084: Clock bias (s)
@@ -80,6 +79,7 @@ typedef struct
     double gps_sqrt_a;                        ///< DF092: Square root of semi-major axis (sqrt(m))
     double semi_major_axis;                   ///< DF092 unscaled: Semi-major axis = gps_sqrt_a ** 2
     uint32_t gps_toe;                         ///< DF093: Time of ephemeris (s of GPS week)
+    uint32_t time_of_week;                    ///< DF093 unscaled: Time of week = gps_toe
     double gps_cic;                           ///< DF094: Inclination correction cosine term (rad)
     double gps_omega0;                        ///< DF095: Longitude of ascending node at weekly epoch (rad)
     double right_ascension_of_ascending_node; ///< DF095 unscaled: Right ascension of ascending node = gps_omega0 * pi
@@ -274,9 +274,11 @@ eph_history_t eph_history[MAX_SAT + 1]; // Index 1–32 (PRNs)
 
 extern bool eph_available[MAX_SAT + 1];
 extern size_t msm4_count[MAX_SAT + 1];
+extern size_t msm1_count[MAX_SAT + 1];
 extern double pseudorange_history[MAX_SAT + 1][MAX_EPOCHS];
 extern size_t pseudorange_count[MAX_SAT + 1];
 extern rtcm_1074_msm4_t msm4_history[MAX_SAT + 1][MAX_EPOCHS];
+rtcm_1002_msm1_t msm1_history[MAX_SAT + 1][MAX_EPOCHS];
 extern rtcm_1019_ephemeris_t eph_table[MAX_SAT + 1];
 
 #endif // DF_PARSER_H

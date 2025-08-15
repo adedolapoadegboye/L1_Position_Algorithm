@@ -5,7 +5,7 @@
 #include "../include/algo.h"
 
 // Function to sort satellites based on their ephemeris and MSM4 data
-int sort_satellites(eph_history_t *eph_history, rtcm_1074_msm4_t msm4_history[MAX_SAT][MAX_EPOCHS]);
+int sort_satellites(eph_history_t *eph_history, rtcm_1074_msm4_t msm4_history[MAX_SAT][MAX_EPOCHS], rtcm_1002_msm1_t msm1_history[MAX_SAT][MAX_EPOCHS]);
 // Structure to hold GPS satellite data for each satellite available in the system
 typedef struct
 {

@@ -53,7 +53,7 @@ int file_input_mode(bool is_parsed)
     }
 
     // Step 3: Sort through the stored ephemeris and MSM4 data to prepare for position solving
-    int sat_sorter_status = sort_satellites(eph_history, msm4_history);
+    int sat_sorter_status = sort_satellites(eph_history, msm4_history, msm1_history);
     if (sat_sorter_status != 0)
     {
         fprintf(stderr, COLOR_RED "Error: Failed to sort satellites.\n" COLOR_RESET);
