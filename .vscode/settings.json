@@ -22,7 +22,8 @@
         "satellites.h": "c",
         "df_parser.h": "c",
         "rtcm_reader.h": "c",
-        "locale": "c"
+        "locale": "c",
+        "receiver.h": "c"
     },
     "cSpell.words": [
         "CELLPRN",

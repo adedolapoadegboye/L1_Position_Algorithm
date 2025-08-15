@@ -21,73 +21,152 @@ void mat3x3_vec3_mult(const double mat[3][3], const double vec[3], double out[3]
     }
 }
 
+// Helper: Find the closest eph index for prn whose EPH time_of_week is just before or equal to pseudorange_time
+static int find_closest_eph_idx(const eph_history_t *hist, uint32_t pseudorange_time)
+{
+    int best_idx = -1;
+    uint32_t best_toe = 0;
+    for (size_t i = 0; i < hist->count; i++)
+    {
+        uint32_t toe = hist->eph[i].gps_toe; // use TOE
+        if (toe <= pseudorange_time && toe >= best_toe)
+        {
+            best_toe = toe;
+            best_idx = (int)i;
+        }
+    }
+    return best_idx;
+}
+
 int satellite_position_eci(const gps_satellite_data_t gps_lists[])
 {
     for (int prn = 1; prn <= MAX_SAT; prn++)
     {
-        if (gps_lists[prn].times_of_ephemeris[0] == 0)
+        // Skip PRNs with no ephemeris history at all
+        if (eph_history[prn].count == 0)
         {
-            printf("No ephemeris data available for PRN %d\n", prn);
+            // printf("No ephemeris history for PRN %d\n", prn);
             continue;
         }
 
-        // Iterate through each epoch of the satellite data
         for (int k = 0; k < MAX_EPOCHS; k++)
         {
             if (gps_lists[prn].times_of_pseudorange[k] == 0)
                 continue;
 
-            // Time difference (seconds)
-            double time_diff = (gps_lists[prn].times_of_pseudorange[k] / 1000) - gps_lists[prn].times_of_ephemeris[k];
+            // --- 1) Normalize observation time to seconds ---
+            double t_obs = gps_lists[prn].times_of_pseudorange[k];
+            if (t_obs > 604800.0)
+                t_obs *= 1.0 / 1000.0;
 
-            // Mean motion (deg/s)
-            double mean_motion = sqrt(MU / pow(gps_lists[prn].semi_major_axes[k], 3));
+            // --- 2) Find best ephemeris for this observation time (TOE <= t_obs) ---
+            int eph_idx = find_closest_eph_idx(&eph_history[prn], (uint32_t)t_obs);
+            if (eph_idx < 0)
+            {
+                // No suitable ephemeris before/at this time; skip
+                // printf("No suitable ephemeris for PRN %d at t=%.3f\n", prn, t_obs);
+                continue;
+            }
 
-            // Mean anomaly at this epoch
-            double mean_anomaly = gps_lists[prn].mean_anomalies[k] + (mean_motion * time_diff);
+            const rtcm_1019_ephemeris_t *eph = &eph_history[prn].eph[eph_idx];
 
-            // True anomaly approximation (series expansion)
-            double true_anomaly = mean_anomaly + (2 * gps_lists[prn].eccentricities[k] - 0.25 * pow(gps_lists[prn].eccentricities[k], 3)) * sin(mean_anomaly) + (1.25 * pow(gps_lists[prn].eccentricities[k], 2)) * sin(2 * mean_anomaly) + (13.0 / 12.0) * pow(gps_lists[prn].eccentricities[k], 3) * sin(3 * mean_anomaly);
+            // Pull elements from ephemeris (radians & meters as you stored them)
+            const double a = eph->semi_major_axis;
+            const double e = eph->eccentricity;
+            const double i = eph->inclination;
+            const double Omega = eph->right_ascension_of_ascending_node;
+            const double omega = eph->argument_of_periapsis;
+            const double M0 = eph->mean_anomaly;
+            const double toe = (double)eph->gps_toe; // seconds
 
-            // printf("PRN %d, Epoch %d: Time delta= %.3f Mean motion= %.3f Mean Anomaly = %.3f, True Anomaly = %.3f\n", prn, k, time_diff, mean_motion, mean_anomaly, true_anomaly);
+            // Basic sanity guards
+            if (!(a > 0.0) || !(e >= 0.0 && e < 1.0) || !isfinite(i) || !isfinite(M0))
+            {
+                // printf("Bad elements for PRN %d at k=%d (a=%g, e=%g)\n", prn, k, a, e);
+                continue;
+            }
 
-            // Perifocal coordinates
-            double radius = gps_lists[prn].semi_major_axes[k] * (1 - pow(gps_lists[prn].eccentricities[k], 2)) / (1 + gps_lists[prn].eccentricities[k] * cos(true_anomaly));
-            double p = radius * cos(true_anomaly);
-            double q = radius * sin(true_anomaly);
-            double w = 0.0;
-            double pqw[3] = {p, q, w};
+            // --- 3) Time since ephemeris epoch ---
+            const double dt = t_obs - toe;
+            // printf("PRN %d, Epoch %d: dt = %.3f seconds\n", prn, k, dt);
+
+            // --- 4) Mean motion (rad/s) and mean anomaly ---
+            const double n = sqrt(MU / (a * a * a)); // MU in m^3/s^2
+            double M = M0 + n * dt;
+
+            // Normalize M into [-pi, pi] for numerical stability
+            M = fmod(M + M_PI, 2.0 * M_PI);
+            if (M < 0)
+                M += 2.0 * M_PI;
+            M -= M_PI;
+
+            // --- 5) Solve Kepler for E (eccentric anomaly) via simple iteration (good enough for GPS e) ---
+            double E = M; // initial guess
+            for (int it = 0; it < 10; ++it)
+            {
+                double f = E - e * sin(E) - M;
+                double fp = 1.0 - e * cos(E);
+                double dE = -f / fp;
+                E += dE;
+                if (fabs(dE) < 1e-12)
+                    break;
+            }
+
+            // True anomaly
+            double cosE = cos(E), sinE = sin(E);
+            double sqrt1me2 = sqrt(fmax(0.0, 1.0 - e * e));
+            double sinv = (sqrt1me2 * sinE) / (1.0 - e * cosE);
+            double cosv = (cosE - e) / (1.0 - e * cosE);
+            double v = atan2(sinv, cosv);
+            // printf("PRN %d, Epoch %d: True Anomaly = %.6f\n", prn, k, v);
+
+            // Radius in the orbital plane
+            double r = a * (1.0 - e * cosE);
+            if (!(r > 0.0) || !isfinite(r))
+            {
+                // printf("Bad radius for PRN %d (r=%g)\n", prn, r);
+                continue;
+            }
+
+            // PQW coordinates (perifocal frame)
+            double pqw[3] = {r * cos(v), r * sin(v), 0.0};
 
             // printf("PRN %d, Epoch %d: PQW = [%.3f, %.3f, %.3f]\n", prn, k, pqw[0], pqw[1], pqw[2]);
 
-            // // Rotation matrices
-            double Rz_omega[3][3] = {
-                {cos(-gps_lists[prn].argument_of_periapsis[k]), -sin(-gps_lists[prn].argument_of_periapsis[k]), 0},
-                {sin(-gps_lists[prn].argument_of_periapsis[k]), cos(-gps_lists[prn].argument_of_periapsis[k]), 0},
-                {0, 0, 1}};
+            // --- 6) Rotation matrices to ECI: Rz(Ω) * Rx(i) * Rz(ω) ---
+            // We rotate +ω about z, +i about x, +Ω about z (no leading negatives needed)
+            const double cO = cos(Omega), sO = sin(Omega);
+            const double ci = cos(i), si = sin(i);
+            const double co = cos(omega), so = sin(omega);
 
+            // Rz(ω)
+            double Rz_omega[3][3] = {
+                {co, -so, 0},
+                {so, co, 0},
+                {0, 0, 1}};
+            // Rx(i)
             double Rx_i[3][3] = {
                 {1, 0, 0},
-                {0, cos(-gps_lists[prn].inclinations[k]), -sin(-gps_lists[prn].inclinations[k])},
-                {0, sin(-gps_lists[prn].inclinations[k]), cos(-gps_lists[prn].inclinations[k])}};
-
+                {0, ci, -si},
+                {0, si, ci}};
+            // Rz(Ω)
             double Rz_Omega[3][3] = {
-                {cos(-gps_lists[prn].right_ascension_of_ascending_node[k]), -sin(-gps_lists[prn].right_ascension_of_ascending_node[k]), 0},
-                {sin(-gps_lists[prn].right_ascension_of_ascending_node[k]), cos(-gps_lists[prn].right_ascension_of_ascending_node[k]), 0},
+                {cO, -sO, 0},
+                {sO, cO, 0},
                 {0, 0, 1}};
 
-            // Apply rotations: PQW -> ECI
-            double temp1[3], temp2[3], eci[3];
-            mat3x3_vec3_mult(Rz_omega, pqw, temp1);
-            mat3x3_vec3_mult(Rx_i, temp1, temp2);
-            mat3x3_vec3_mult(Rz_Omega, temp2, eci);
+            // Apply rotations: ECI = Rz(Ω) * Rx(i) * Rz(ω) * pqw
+            double tmp1[3], tmp2[3], eci[3];
+            mat3x3_vec3_mult(Rz_omega, pqw, tmp1);
+            mat3x3_vec3_mult(Rx_i, tmp1, tmp2);
+            mat3x3_vec3_mult(Rz_Omega, tmp2, eci);
 
-            // Save ECI position
-            sat_eci_positions[prn].x[k] = eci[0];
-            sat_eci_positions[prn].y[k] = eci[1];
-            sat_eci_positions[prn].z[k] = eci[2];
+            // Save
+            sat_eci_positions[prn].x[k] = eci[0] / 1000.0;
+            sat_eci_positions[prn].y[k] = eci[1] / 1000.0;
+            sat_eci_positions[prn].z[k] = eci[2] / 1000.0;
 
-            // printf("PRN %d, Epoch %d: ECI = [%.3f, %.3f, %.3f]\n", prn, k, eci[0], eci[1], eci[2]);
+            printf("PRN %d, Epoch %d: ECI = [%.3f, %.3f, %.3f]\n", prn, k, sat_eci_positions[prn].x[k], sat_eci_positions[prn].y[k], sat_eci_positions[prn].z[k]);
         }
     }
     return 0;
