@@ -29,6 +29,7 @@
         "CELLSIG",
         "ECEF",
         "ecefs",
+        "eidx",
         "iodc",
         "iode",
         "iods",

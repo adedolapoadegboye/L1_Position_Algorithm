@@ -63,7 +63,7 @@ int file_input_mode(bool is_parsed)
     else
     {
         printf(COLOR_GREEN "Successfully sorted satellites.\n" COLOR_RESET);
-        print_gps_list(); // Print the sorted satellite data for debugging
+        // print_gps_list(); // Print the sorted satellite data for debugging
     }
 
     // Step 4: Find satellite positions in ECI coordinates and convert to ECEF
