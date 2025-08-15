@@ -114,7 +114,7 @@ int file_input_mode(bool is_parsed)
     }
     else
     {
-        printf(COLOR_GREEN "Successfully estimated receiver position in ECEF.\n" COLOR_RESET);
+        printf(COLOR_GREEN "Successfully estimated receiver position.\n" COLOR_RESET);
     }
 
     fclose(fp);

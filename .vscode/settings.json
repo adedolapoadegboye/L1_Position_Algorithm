@@ -23,7 +23,8 @@
         "df_parser.h": "c",
         "rtcm_reader.h": "c",
         "locale": "c",
-        "receiver.h": "c"
+        "receiver.h": "c",
+        "string.h": "c"
     },
     "cSpell.words": [
         "CELLPRN",

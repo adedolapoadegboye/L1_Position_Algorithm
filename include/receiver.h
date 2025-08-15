@@ -3,10 +3,33 @@
 
 #include "../include/algo.h"
 #include "../include/satellites.h"
+#include <assert.h>
+#include <math.h>
+#include <float.h>
+#include <stdio.h>
+#include <string.h>
 
 #define ITERATIONS 10
 #define MIN_SATS 4
 #define RAD2DEG (180.0 / M_PI)
+// ========================= TUNABLES / DEBUG =========================
+#define ENABLE_LSQ_DEBUG 1
+#define MAX_UNIQUE_EPOCHS 10000 // hard cap to avoid huge working sets
+#define MAX_SV_USED MAX_SAT     // per-epoch satellite cap (<= MAX_SAT)
+// ===================================================================
+
+#if ENABLE_LSQ_DEBUG
+#define DLOG(...)                     \
+    do                                \
+    {                                 \
+        fprintf(stderr, __VA_ARGS__); \
+    } while (0)
+#else
+#define DLOG(...) \
+    do            \
+    {             \
+    } while (0)
+#endif
 
 typedef struct
 {

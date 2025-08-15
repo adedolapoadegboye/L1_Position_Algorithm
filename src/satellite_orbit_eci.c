@@ -100,7 +100,7 @@ int satellite_orbit_eci(const gps_satellite_data_t gps_lists[])
             sat_orbit_eci_positions[prn].y[k] = eci[1];
             sat_orbit_eci_positions[prn].z[k] = eci[2];
 
-            printf("PRN: %d, Orbit ECI[%d][0]: %.3f, Orbit ECI[%d][1]: %.3f, Orbit ECI[%d][2]: %.3f\n", prn, k, sat_orbit_eci_positions[prn].x[k] / 1000, k, sat_orbit_eci_positions[prn].y[k] / 1000, k, sat_orbit_eci_positions[prn].z[k] / 1000);
+            // printf("PRN: %d, Orbit ECI[%d][0]: %.3f, Orbit ECI[%d][1]: %.3f, Orbit ECI[%d][2]: %.3f\n", prn, k, sat_orbit_eci_positions[prn].x[k] / 1000, k, sat_orbit_eci_positions[prn].y[k] / 1000, k, sat_orbit_eci_positions[prn].z[k] / 1000);
         }
     }
 
