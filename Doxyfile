@@ -1,0 +1,77 @@
+#========================
+# Project basics
+#========================
+PROJECT_NAME           = "GNSS L1 Position Resolver"
+PROJECT_BRIEF          = "RTCM ingest → Satellite ECEF → Receiver solution (ECEF/LLA) → Plots/KML"
+PROJECT_NUMBER         = 1.0
+OUTPUT_DIRECTORY       = docs
+CREATE_SUBDIRS         = NO
+
+# Use your README as the home page:
+USE_MDFILE_AS_MAINPAGE = README.md
+
+#========================
+# Input
+#========================
+INPUT                  = README.md include src
+FILE_PATTERNS          = *.h *.hpp *.c *.md
+RECURSIVE              = YES
+EXCLUDE                = plots build .git .github
+
+# Keep code listings and source browsing handy
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+STRIP_CODE_COMMENTS    = NO
+
+# Warnings (useful while cleaning up docs)
+WARNINGS               = NO
+WARN_IF_UNDOCUMENTED   = NO
+WARN_IF_DOC_ERROR      = NO
+WARN_NO_PARAMDOC       = NO
+WARN_LOGFILE           = docs/doxygen_warnings.log
+
+#========================
+# Output formats
+#========================
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO
+GENERATE_MAN           = NO
+GENERATE_XML           = NO
+
+#========================
+# Diagrams (Graphviz)
+#========================
+HAVE_DOT               = YES
+DOT_NUM_THREADS        = 2
+CLASS_GRAPH            = YES
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+DOT_TRANSPARENT        = YES
+DOT_IMAGE_FORMAT       = png
+INTERACTIVE_SVG        = YES
+
+#========================
+# Look & feel
+#========================
+FULL_PATH_NAMES        = NO
+TAB_SIZE               = 4
+OPTIMIZE_OUTPUT_FOR_C  = YES
+JAVADOC_AUTOBRIEF      = YES
+MULTILINE_CPP_IS_BRIEF = NO
+
+#========================
+# Indexing & refs
+#========================
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+GENERATE_TREEVIEW      = YES
+
+#========================
+# Groups / modules
+#========================
+SUBGROUPING            = YES

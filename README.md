@@ -143,12 +143,7 @@ Open `receiver_track.kml` saved in /plots in Google Earth to view the path.
 
 This project uses **Doxygen** for code documentation.
 
-Generate HTML docs:
-```bash
-doxygen Doxyfile
-```
-
-The generated documentation will appear in `docs/html/index.html`.
+The generated documentation is in the dir `docs/html/index.html`.
 
 ---
 
