@@ -41,7 +41,7 @@ This project is designed as a reference framework for **GNSS engineers, students
 │   ├── serial_connect.c # Serial input (Win/Linux/macOS)
 │   ├── df_parser.c      # RTCM message parsing
 │   ├── all_plots.c      # Output logging utilities
-│   ├── print_utils.c    # ECEF <-> LLA conversion, helpers
+│   ├── print_utils.c    # print helpers
 │   └── ...
 ├── include/             # Header files
 ├── example/             # Sample RTCM log files
@@ -118,8 +118,6 @@ gnuplot plots/plot_3d.gp
 
 ![alt text](plots/pseudorange_time.png)
 
-![alt text](<Screenshot 2025-08-24 at 3.51.53 PM.png>)
-
 ### Google Earth
 Convert geodetic positions to KML:
 ```bash
@@ -136,6 +134,8 @@ END{
 }' plots/receiver_track_geo.dat > plots/receiver_track.kml```
 
 Open `receiver_track.kml` saved in /plots in Google Earth to view the path.
+
+![alt text](<Screenshot 2025-08-24 at 3.51.53 PM.png>)
 
 ---
 
