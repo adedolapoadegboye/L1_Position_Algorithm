@@ -38,7 +38,7 @@ typedef struct
     double z[MAX_EPOCHS];
 } estimated_position_t;
 
-extern estimated_position_t estimated_positions_ecef[MAX_SAT + 1];
+extern estimated_position_t estimated_positions_ecef;
 
 int estimate_receiver_positions(void);
 
@@ -52,5 +52,7 @@ typedef struct
 } latlonalt_position_t;
 
 extern latlonalt_position_t latlonalt_positions;
+
+extern int n_times;
 
 #endif // RECEIVER_H

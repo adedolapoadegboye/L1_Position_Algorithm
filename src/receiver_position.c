@@ -28,8 +28,9 @@
 extern gps_satellite_data_t gps_list[MAX_SAT + 1];
 extern sat_ecef_history_t sat_ecef_positions[MAX_SAT + 1];
 extern size_t pseudorange_count[MAX_SAT + 1];
-estimated_position_t estimated_positions_ecef[MAX_SAT + 1] = {0};
+estimated_position_t estimated_positions_ecef = {0};
 latlonalt_position_t latlonalt_positions = {0};
+int n_times = 0; // total epochs found during position estimation
 
 #define ITERATIONS 10
 
@@ -205,7 +206,7 @@ int estimate_receiver_positions(void)
     for (int i = 0; i < MAX_UNIQUE_EPOCHS; ++i)
         all_times[i] = 0;
 
-    int n_times = collect_unique_pr_times_ms(gps_list, all_times);
+    n_times = collect_unique_pr_times_ms(gps_list, all_times);
     printf("[C] total epochs = %d\n", n_times);
     if (n_times > 0 && n_times <= 20)
     {
@@ -352,11 +353,11 @@ int estimate_receiver_positions(void)
         if (n_svs >= 4)
         {
             /* store final ECEF estimate (per epoch index ti) */
-            estimated_positions_ecef[ti].x[0] = assumed_pos[0];
-            estimated_positions_ecef[ti].y[0] = assumed_pos[1];
-            estimated_positions_ecef[ti].z[0] = assumed_pos[2];
+            estimated_positions_ecef.x[ti] = assumed_pos[0];
+            estimated_positions_ecef.y[ti] = assumed_pos[1];
+            estimated_positions_ecef.z[ti] = assumed_pos[2];
             // printf("[C][epoch %d] FINAL pos ECEF = (%.3f, %.3f, %.3f) m, clock_bias=%.6f m\n",
-            //        ti, assumed_pos[0], assumed_pos[1], assumed_pos[2], clock_bias);
+            //        ti, estimated_positions_ecef.x[ti], estimated_positions_ecef.x[ti], estimated_positions_ecef.x[ti], clock_bias);
 
             /* --- Convert to geodetic and store --- */
             if (ti < MAX_EPOCHS)

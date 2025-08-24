@@ -29,8 +29,8 @@
  */
 int read_next_rtcm_message(FILE *fp)
 {
-    char line[4096];             // Buffer for reading lines
-    unsigned int line_count = 1; // Counter for lines processed
+    char line[4096]; // Buffer for reading lines
+    // unsigned int line_count = 1; // Counter for lines processed
 
     while (fgets(line, sizeof(line), fp) != NULL)
     {
@@ -41,7 +41,7 @@ int read_next_rtcm_message(FILE *fp)
         }
 
         // Debug print
-        printf(COLOR_GREEN "Processing Line: %d \n" COLOR_RESET, line_count++);
+        // printf(COLOR_GREEN "Processing Line: %d \n" COLOR_RESET, line_count++);
 
         // Extract DF002 = message type
         char *df002_ptr = strstr(line, "DF002=");

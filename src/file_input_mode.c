@@ -19,6 +19,9 @@
 #include "../include/rtcm_reader.h"
 #include "../include/satellites.h"
 #include "../include/receiver.h"
+#include "../include/plots.h"
+
+extern int n_times; // total epochs found during position estimation
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -117,7 +120,33 @@ int file_input_mode(bool is_parsed)
         printf(COLOR_GREEN "Successfully estimated receiver position.\n" COLOR_RESET);
     }
 
-    // Step 7: Plot all satellite positions and receiver position on a 3D graph
+    // Step 7: Plot all satellite positions and receiver position on a gnuplot
+    if (write_receiver_track_ecef("plots/receiver_track_ecef.dat", n_times) == 0)
+    {
+        printf("[OK] Receiver track written successfully.\n");
+    }
+    else
+    {
+        fprintf(stderr, "[ERR] Failed to write receiver track data.\n");
+    }
+
+    if (write_sat_orbits("plots/sat_track_ecef.dat") == 0)
+    {
+        printf("[OK] Satellite orbits written successfully.\n");
+    }
+    else
+    {
+        fprintf(stderr, "[ERR] Failed to write satellite orbits data.\n");
+    }
+
+    if (write_receiver_track_geo("plots/receiver_track_geo.dat", n_times) == 0)
+    {
+        printf("[OK] Receiver Geo positions written successfully.\n");
+    }
+    else
+    {
+        fprintf(stderr, "[ERR] Failed to write receiver geo position data.\n");
+    }
 
     fclose(fp);
     return 0;
