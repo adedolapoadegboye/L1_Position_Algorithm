@@ -1,49 +1,70 @@
 /**
- * @file receiver_position.c
- * @brief Functions for estimating receiver position.
- * This file contains functions to handle receiver position calculations, first in ECEF then in decimal format.
+ * Convert ECEF (Earth-Centered Earth-Fixed) coordinates to spherical geographic coordinates.
+ *
+ * This follows the Python reference:
+ *   r     = sqrt(x^2 + y^2 + z^2)
+ *   theta = atan2(y, x)                     -> longitude (deg)
+ *   phi   = acos(z / r)                     -> polar angle
+ *   theta_deg = theta * 360 / (2*pi)
+ *   phi_deg   = 90 - phi * 360 / (2*pi)     -> latitude (deg)
+ *
+ * @param x   ECEF X (meters)
+ * @param y   ECEF Y (meters)
+ * @param z   ECEF Z (meters)
+ * @param lon_deg [out] Longitude in degrees
+ * @param lat_deg [out] Latitude in degrees
+ * @param r_m     [out] Radius in meters (distance from Earth's center)
  */
 
-#include "../include/satellites.h"
-#include "../include/algo.h"
 #include "../include/df_parser.h"
-#include "../include/rtcm_reader.h"
-#include "../include/df_parser.h"
-#include "../include/satellites.h"
-#include "../include/receiver.h"
 
-#define WGS84_A 6378137.0                          // semi-major axis in meters
-#define WGS84_F (1.0 / 298.257223563)              // flattening
-#define WGS84_B (WGS84_A * (1.0 - WGS84_F))        // semi-minor axis
-#define WGS84_E2 (2 * WGS84_F - WGS84_F * WGS84_F) // eccentricity squared
-#define WGS84_EP2 ((WGS84_A * WGS84_A - WGS84_B * WGS84_B) / (WGS84_B * WGS84_B))
-
-latlonalt_position_t latlongalt_positions_ecef[MAX_SAT + 1] = {0};
-
-/**
- * Convert ECEF (meters) to geodetic coordinates on WGS84 ellipsoid.
- * lat/lon in degrees, alt in meters.
- */
+// Keep this signature:
 void ecef_to_geodetic(double x, double y, double z,
                       double *lat_deg, double *lon_deg, double *alt_m)
 {
+    // WGS-84 constants
+    const double a = 6378137.0;                   // semi-major axis (m)
+    const double f = 1.0 / 298.257223563;         // flattening
+    const double b = a * (1.0 - f);               // semi-minor axis (m)
+    const double e2 = 2.0 * f - f * f;            // first eccentricity^2
+    const double ep2 = (a * a - b * b) / (b * b); // second eccentricity^2
+    const double rad2deg = 180.0 / M_PI;
+
+    // Longitude
     double lon = atan2(y, x);
 
+    // Auxiliary quantities
     double p = sqrt(x * x + y * y);
-    double theta = atan2(z * WGS84_A, p * WGS84_B);
+    // Guard against r=0
+    if (p == 0.0 && z == 0.0)
+    {
+        if (lat_deg)
+            *lat_deg = 0.0;
+        if (lon_deg)
+            *lon_deg = 0.0;
+        if (alt_m)
+            *alt_m = -a; // arbitrary
+        return;
+    }
 
-    double sin_theta = sin(theta);
-    double cos_theta = cos(theta);
+    // Bowring’s formula for initial latitude
+    double theta = atan2(z * a, p * b);
+    double st = sin(theta), ct = cos(theta);
 
-    double lat = atan2(z + WGS84_EP2 * WGS84_B * sin_theta * sin_theta * sin_theta,
-                       p - WGS84_E2 * WGS84_A * cos_theta * cos_theta * cos_theta);
+    double lat = atan2(z + ep2 * b * st * st * st,
+                       p - e2 * a * ct * ct * ct);
 
-    double sin_lat = sin(lat);
-    double N = WGS84_A / sqrt(1.0 - WGS84_E2 * sin_lat * sin_lat);
+    // Radius of curvature in the prime vertical
+    double sl = sin(lat);
+    double N = a / sqrt(1.0 - e2 * sl * sl);
 
+    // Altitude above ellipsoid
     double alt = p / cos(lat) - N;
 
-    *lat_deg = lat * (180.0 / M_PI);
-    *lon_deg = lon * (180.0 / M_PI);
-    *alt_m = alt;
+    if (lat_deg)
+        *lat_deg = lat * rad2deg;
+    if (lon_deg)
+        *lon_deg = lon * rad2deg;
+    if (alt_m)
+        *alt_m = alt;
 }

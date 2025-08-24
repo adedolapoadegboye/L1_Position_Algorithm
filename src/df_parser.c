@@ -47,7 +47,7 @@ int parse_rtcm_1002(const char *line, rtcm_1002_msm1_t *msm1)
     EXTRACT("DF002", "%hu", &msm1->msg_type);
     EXTRACT("DF003", "%hu", &msm1->station_id);
     EXTRACT("DF004", "%u", &msm1->time_of_week);
-    msm1->time_of_week = msm1->time_of_week / 1000;
+    msm1->time_of_week = msm1->time_of_week;
     EXTRACT("DF005", "%hhu", &msm1->sync_gps_message_flag);
     EXTRACT("DF006", "%hhu", &msm1->num_satellites);
     EXTRACT("DF007", "%hhu", &msm1->smooth_interval_flag);

@@ -257,24 +257,17 @@ void print_gps_list(void)
         // Pseudorange table (like before)
         if (any_pr)
         {
-            printf("Idx | Pseudorange      | Time_of_PR    | Eccentricity   | Inclination    | Mean_Anomaly   | SemiMajorAxis   | RAAN           | ArgPeriapsis    | TOE\n");
-            printf("----+------------------+---------------+----------------+----------------+----------------+----------------+----------------+----------------+------------\n");
+            printf("Idx | Pseudorange      | Time_of_PR    \n");
+            printf("----+------------------+---------------\n");
             for (int i = 0; i < MAX_EPOCHS; i++)
             {
                 if (gps_list[prn].pseudoranges[i] == 0)
                     continue;
 
-                printf("%3d | %16.6f | %11u | %14.8g | %14.8g | %14.8g | %14.8g | %14.8g | %14.8g | %10u\n",
+                printf("%3d | %16.6f | %3d\n",
                        i,
                        gps_list[prn].pseudoranges[i],
-                       gps_list[prn].times_of_pseudorange[i],
-                       gps_list[prn].eccentricities[i],
-                       gps_list[prn].inclinations[i],
-                       gps_list[prn].mean_anomalies[i],
-                       gps_list[prn].semi_major_axes[i],
-                       gps_list[prn].right_ascension_of_ascending_node[i],
-                       gps_list[prn].argument_of_periapsis[i],
-                       (unsigned)gps_list[prn].times_of_ephemeris[i]);
+                       gps_list[prn].times_of_pseudorange[i]);
             }
         }
 

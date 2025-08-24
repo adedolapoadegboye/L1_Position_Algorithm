@@ -11,14 +11,14 @@ typedef struct
 {
     double prn;
     double pseudoranges[MAX_EPOCHS];
-    uint32_t times_of_pseudorange[MAX_EPOCHS]; // Epoch time in milliseconds of the week
+    uint32_t times_of_pseudorange[MAX_EPOCHS];
     double eccentricities[MAX_EPOCHS];
     double inclinations[MAX_EPOCHS];
     double mean_anomalies[MAX_EPOCHS];
     double semi_major_axes[MAX_EPOCHS];
     double right_ascension_of_ascending_node[MAX_EPOCHS];
     double argument_of_periapsis[MAX_EPOCHS];
-    double times_of_ephemeris[MAX_EPOCHS]; // Epoch time in milliseconds of the week
+    double times_of_ephemeris[MAX_EPOCHS];
 } gps_satellite_data_t;
 
 extern gps_satellite_data_t gps_list[MAX_SAT + 1];
@@ -50,9 +50,8 @@ typedef struct
     double x[MAX_EPOCHS];
     double y[MAX_EPOCHS];
     double z[MAX_EPOCHS];
+    double t_ms[MAX_EPOCHS];
 } sat_ecef_history_t;
-
-extern sat_ecef_history_t sat_ecef_positions[MAX_SAT + 1];
 
 extern sat_ecef_history_t sat_ecef_positions[MAX_SAT + 1];
 
@@ -74,7 +73,7 @@ typedef struct
 
 extern sat_orbit_eci_history_t sat_orbit_eci_positions[MAX_SAT + 1];
 
-int satellite_position_ecef(const sat_eci_history_t sat_eci_position[MAX_SAT + 1], const gps_satellite_data_t gps_lists[MAX_SAT + 1]);
+int satellite_position_ecef(const gps_satellite_data_t gps_lists[MAX_SAT + 1]);
 
 int satellite_orbit_eci(const gps_satellite_data_t gps_lists[]);
 

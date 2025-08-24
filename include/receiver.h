@@ -14,11 +14,11 @@
 #define RAD2DEG (180.0 / M_PI)
 // ========================= TUNABLES / DEBUG =========================
 #define ENABLE_LSQ_DEBUG 1
-#define MAX_UNIQUE_EPOCHS 10000 // hard cap to avoid huge working sets
-#define MAX_SV_USED MAX_SAT     // per-epoch satellite cap (<= MAX_SAT)
+#define MAX_UNIQUE_EPOCHS 100000 // hard cap to avoid huge working sets
+#define MAX_SV_USED MAX_SAT      // per-epoch satellite cap (<= MAX_SAT)
 // ===================================================================
 
-#if ENABLE_LSQ_DEBUG
+#if ENABLE_LSQ_DEBUGs
 #define DLOG(...)                     \
     do                                \
     {                                 \
@@ -51,6 +51,6 @@ typedef struct
     double alt[MAX_EPOCHS];
 } latlonalt_position_t;
 
-extern latlonalt_position_t latlonalt_positions[MAX_SAT + 1];
+extern latlonalt_position_t latlonalt_positions;
 
 #endif // RECEIVER_H

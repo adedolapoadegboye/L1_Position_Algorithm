@@ -6,7 +6,7 @@
 #include "../include/algo.h"
 
 /// Default file path used when user provides no input
-#define DEFAULT_FILE_PATH "example/parsed_data.txt"
+#define DEFAULT_FILE_PATH "example/parsed_log.txt"
 
 /// Max number of retry attempts for file input
 #define MAX_RETRIES 3

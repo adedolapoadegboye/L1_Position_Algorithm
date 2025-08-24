@@ -79,7 +79,7 @@ int file_input_mode(bool is_parsed)
         printf(COLOR_GREEN "Successfully found satellite positions in ECI.\n" COLOR_RESET);
     }
 
-    int ecef_status = satellite_position_ecef(sat_eci_positions, gps_list);
+    int ecef_status = satellite_position_ecef(gps_list);
     if (ecef_status != 0)
     {
         fprintf(stderr, COLOR_RED "Error: Failed to convert satellite positions to ECEF.\n" COLOR_RESET);
@@ -116,6 +116,8 @@ int file_input_mode(bool is_parsed)
     {
         printf(COLOR_GREEN "Successfully estimated receiver position.\n" COLOR_RESET);
     }
+
+    // Step 7: Plot all satellite positions and receiver position on a 3D graph
 
     fclose(fp);
     return 0;

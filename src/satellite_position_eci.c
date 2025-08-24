@@ -28,8 +28,8 @@ static int find_closest_eph_idx(const eph_history_t *hist, uint32_t pseudorange_
     uint32_t best_toe = 0;
     for (size_t i = 0; i < hist->count; i++)
     {
-        uint32_t toe = hist->eph[i].gps_toe; // use TOE
-        if (toe <= pseudorange_time && toe >= best_toe)
+        uint32_t toe = hist->eph[i].gps_toe;
+        if ((toe >= pseudorange_time || toe <= pseudorange_time) && toe >= best_toe)
         {
             best_toe = toe;
             best_idx = (int)i;
@@ -56,6 +56,7 @@ int satellite_position_eci(const gps_satellite_data_t gps_lists[])
 
             // --- 1) Normalize observation time to seconds ---
             double t_obs = gps_lists[prn].times_of_pseudorange[k];
+
             if (t_obs > 604800.0)
                 t_obs *= 1.0 / 1000.0;
 
@@ -166,7 +167,7 @@ int satellite_position_eci(const gps_satellite_data_t gps_lists[])
             sat_eci_positions[prn].y[k] = eci[1];
             sat_eci_positions[prn].z[k] = eci[2];
 
-            // printf("PRN %d, Epoch %d: ECI = [%.3f, %.3f, %.3f]\n", prn, k, sat_eci_positions[prn].x[k]/1000, sat_eci_positions[prn].y[k]/1000, sat_eci_positions[prn].z[k]/1000);
+            // printf("PRN %d, Epoch %d: ECI = [%.3f, %.3f, %.3f]\n", prn, k, sat_eci_positions[prn].x[k] / 1000, sat_eci_positions[prn].y[k] / 1000, sat_eci_positions[prn].z[k] / 1000);
         }
     }
     return 0;

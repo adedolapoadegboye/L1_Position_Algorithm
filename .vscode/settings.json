@@ -29,9 +29,11 @@
     "cSpell.words": [
         "CELLPRN",
         "CELLSIG",
+        "DEDUP",
         "ECEF",
         "ecefs",
         "eidx",
+        "glist",
         "iodc",
         "iode",
         "iods",
