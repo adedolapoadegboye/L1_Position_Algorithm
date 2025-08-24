@@ -147,6 +147,32 @@ int file_input_mode(bool is_parsed)
     {
         fprintf(stderr, "[ERR] Failed to write receiver geo position data.\n");
     }
+    if (write_receiver_ecef_epoch_km("plots/receiver_ecef_epoch.dat", n_times) == 0)
+    {
+        printf("[OK] Receiver ECEF (km) vs epoch written successfully.\n");
+    }
+    else
+    {
+        fprintf(stderr, "[ERR] Failed to write receiver ECEF (km) vs epoch.\n");
+    }
+
+    if (write_sat_xyz_km("plots/sat_xyz_km.dat") == 0)
+    {
+        printf("[OK] Satellite XY (km) written successfully.\n");
+    }
+    else
+    {
+        fprintf(stderr, "[ERR] Failed to write satellite XY (km).\n");
+    }
+
+    if (write_pseudorange_time_km("plots/pseudorange_time_km.dat") == 0)
+    {
+        printf("[OK] Pseudorange vs epoch (km) written successfully.\n");
+    }
+    else
+    {
+        fprintf(stderr, "[ERR] Failed to write pseudorange vs epoch (km).\n");
+    }
 
     fclose(fp);
     return 0;

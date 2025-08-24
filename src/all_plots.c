@@ -111,4 +111,81 @@ int write_receiver_track_geo(const char *path, int n_epochs)
 
     // printf("[OK] Receiver GEO track written: %d epochs to %s\n", lines, path);
     return 0;
+} // number of epochs actually solved
+
+static inline double m_to_km(double v_m) { return v_m * 1e-3; }
+
+/* Receiver: epoch_index  X_km  Y_km  Z_km */
+int write_receiver_ecef_epoch_km(const char *path, int n_epochs)
+{
+    FILE *fp = fopen(path, "w");
+    if (!fp)
+        return -1;
+
+    for (int i = 0; i < n_epochs; ++i)
+    {
+        double xk = m_to_km(estimated_positions_ecef.x[i]);
+        double yk = m_to_km(estimated_positions_ecef.y[i]);
+        double zk = m_to_km(estimated_positions_ecef.z[i]);
+
+        if (!isfinite(xk) || !isfinite(yk) || !isfinite(zk))
+            continue;
+
+        // prepend the epoch index i
+        fprintf(fp, "%d %.6f %.6f %.6f\n", i, xk, yk, zk);
+    }
+
+    fclose(fp);
+    return 0;
+}
+
+/* Satellites XY: PRN  X_km  Y_km  (one line per valid ECEF sample) */
+int write_sat_xyz_km(const char *path)
+{
+    FILE *fp = fopen(path, "w");
+    if (!fp)
+        return -1;
+    for (int prn = 1; prn <= MAX_SAT; ++prn)
+    {
+        int wrote_any = 0;
+        for (int k = 0; k < MAX_EPOCHS; ++k)
+        {
+            if (sat_ecef_positions[prn].t_ms[k] == 0.0)
+                continue;
+            double xk = m_to_km(sat_ecef_positions[prn].x[k]);
+            double yk = m_to_km(sat_ecef_positions[prn].y[k]);
+            double zk = m_to_km(sat_ecef_positions[prn].z[k]);
+            if (!isfinite(xk) || !isfinite(yk) || !isfinite(zk))
+                continue;
+            fprintf(fp, "%d %.6f %.6f %.6f\n", prn, xk, yk, zk);
+            wrote_any = 1;
+        }
+        if (wrote_any)
+            fputs("\n\n", fp); // separate blocks (optional)
+    }
+    fclose(fp);
+    return 0;
+}
+
+/* (Optional) Pseudorange vs time: PRN  t(s)  PR_km */
+int write_pseudorange_time_km(const char *path)
+{
+    FILE *fp = fopen(path, "w");
+    if (!fp)
+        return -1;
+    for (int prn = 1; prn <= MAX_SAT; ++prn)
+    {
+        for (int k = 0; k < MAX_EPOCHS; ++k)
+        {
+            uint32_t t = gps_list[prn].times_of_pseudorange[k];
+            double pr = gps_list[prn].pseudoranges[k]; // meters
+            if (t == 0 || !isfinite(pr))
+                continue;
+            double tow_s = (double)t; // adjust if ms
+            fprintf(fp, "%d %.3f %.6f\n", prn, tow_s, pr * 1e-3);
+        }
+        fputs("\n\n", fp);
+    }
+    fclose(fp);
+    return 0;
 }
