@@ -1,24 +1,27 @@
 /**
- * Convert ECEF (Earth-Centered Earth-Fixed) coordinates to spherical geographic coordinates.
+ * @file ecef_to_geodetic.c
+ * @brief Convert ECEF (Earth-Centered, Earth-Fixed) coordinates to geodetic coordinates (WGS-84).
  *
- * This follows the Python reference:
- *   r     = sqrt(x^2 + y^2 + z^2)
- *   theta = atan2(y, x)                     -> longitude (deg)
- *   phi   = acos(z / r)                     -> polar angle
- *   theta_deg = theta * 360 / (2*pi)
- *   phi_deg   = 90 - phi * 360 / (2*pi)     -> latitude (deg)
+ * This function converts Earth-Centered Earth-Fixed (ECEF) Cartesian coordinates
+ * (X, Y, Z in meters) into geodetic latitude, longitude, and altitude above the WGS-84 ellipsoid.
  *
- * @param x   ECEF X (meters)
- * @param y   ECEF Y (meters)
- * @param z   ECEF Z (meters)
- * @param lon_deg [out] Longitude in degrees
- * @param lat_deg [out] Latitude in degrees
- * @param r_m     [out] Radius in meters (distance from Earth's center)
+ * Implementation details:
+ *  - Uses WGS-84 constants (semi-major axis and flattening).
+ *  - Applies Bowring’s formula for latitude computation.
+ *  - Computes ellipsoidal height (altitude) relative to the WGS-84 reference ellipsoid.
+ *
+ * @param[in]  x        ECEF X coordinate (meters).
+ * @param[in]  y        ECEF Y coordinate (meters).
+ * @param[in]  z        ECEF Z coordinate (meters).
+ * @param[out] lat_deg  Geodetic latitude in degrees.
+ * @param[out] lon_deg  Geodetic longitude in degrees.
+ * @param[out] alt_m    Altitude above WGS-84 ellipsoid (meters).
+ *
+ * @note If all inputs (x, y, z) are zero, the function returns lat=0, lon=0, alt=-a (arbitrary).
  */
 
 #include "../include/df_parser.h"
 
-// Keep this signature:
 void ecef_to_geodetic(double x, double y, double z,
                       double *lat_deg, double *lon_deg, double *alt_m)
 {
@@ -28,14 +31,15 @@ void ecef_to_geodetic(double x, double y, double z,
     const double b = a * (1.0 - f);               // semi-minor axis (m)
     const double e2 = 2.0 * f - f * f;            // first eccentricity^2
     const double ep2 = (a * a - b * b) / (b * b); // second eccentricity^2
-    const double rad2deg = 180.0 / M_PI;
+    const double rad2deg = 180.0 / PI;
 
     // Longitude
     double lon = atan2(y, x);
 
-    // Auxiliary quantities
+    // Distance from Z axis
     double p = sqrt(x * x + y * y);
-    // Guard against r=0
+
+    // Guard against origin
     if (p == 0.0 && z == 0.0)
     {
         if (lat_deg)
@@ -47,10 +51,9 @@ void ecef_to_geodetic(double x, double y, double z,
         return;
     }
 
-    // Bowring’s formula for initial latitude
+    // Bowring’s formula for latitude
     double theta = atan2(z * a, p * b);
     double st = sin(theta), ct = cos(theta);
-
     double lat = atan2(z + ep2 * b * st * st * st,
                        p - e2 * a * ct * ct * ct);
 
@@ -58,8 +61,8 @@ void ecef_to_geodetic(double x, double y, double z,
     double sl = sin(lat);
     double N = a / sqrt(1.0 - e2 * sl * sl);
 
-    // Altitude above ellipsoid
-    double alt = p / cos(lat) - N;
+    // Altitude
+    double alt = (p / cos(lat)) - N;
 
     if (lat_deg)
         *lat_deg = lat * rad2deg;

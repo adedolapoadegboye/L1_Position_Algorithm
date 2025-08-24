@@ -2,28 +2,36 @@
  * @file main.c
  * @brief Entry point for the GNSS L1 Position Resolver application.
  *
- * This file contains the main function, which serves as the starting point
- * for the GNSS L1 Position Resolver. It initializes the application menu
- * for selecting the RTCM input source and ensures proper cleanup before exiting.
+ * The program launches a simple interactive flow that lets the user select an
+ * RTCM input source, processes it, and then performs a clean shutdown.
+ *
+ * High-level flow:
+ * 1) Invoke the application menu to select/process the RTCM source.
+ * 2) Clean up any allocated resources before exit.
+ *
+ * @author
+ *   Ade (Adedolapo Adegboye)
+ *
+ * @version 1.0
+ * @date 2025-08-24
  */
 
 #include "../include/algo.h"
 
 /**
- * @brief Main entry point of the GNSS L1 Position Resolver application.
+ * @brief Program entry point.
  *
- * Executes the application menu to allow the user to select and process
- * an RTCM input source. After processing is complete, resources are cleaned up
- * before the program exits.
+ * Runs the application menu for RTCM input selection and processing, then
+ * performs final cleanup before exiting.
  *
- * @return int Returns 0 on successful execution, non-zero otherwise.
+ * @return int 0 on success, non-zero on failure.
  */
 int main(void)
 {
-    // Start the application menu for RTCM input selection
+    /* Launch the application menu (RTCM source selection & processing) */
     app_menu();
 
-    // Perform cleanup of allocated resources
+    /* Release resources and perform final cleanup */
     app_cleanup();
 
     return 0;

@@ -34,12 +34,14 @@
         "ecefs",
         "eidx",
         "glist",
+        "GLONASS",
         "iodc",
         "iode",
         "iods",
         "latlonalt",
         "periapsis",
         "Perifocal",
+        "Pseudorange",
         "Raphson"
     ]
 }
