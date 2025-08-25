@@ -27,6 +27,8 @@ This project is designed as a reference framework for **GNSS engineers, students
   - Plotting with **Gnuplot**: 2D and 3D orbit/track views.
   - Export to `.kml` for **Google Earth** mapping.
 
+![alt text](screenshots/program_flow.png)
+
 ---
 
 ## 📂 Project Structure
@@ -87,6 +89,8 @@ You will see a terminal menu with RTCM input options. Select option 3 and paste 
   - `3` = Parsed RTCM text file (recommended)
   - `4` = Exit
 
+![alt text](screenshots/flowchart.png)
+
 ### 2. Provide Input File
 If you select option **3**, the program will prompt for a parsed log file path.
 Press **Enter** to use the default example file in the /example directory.
@@ -137,7 +141,7 @@ END{
 
 Open `receiver_track.kml` saved in /plots in Google Earth to view the path.
 
-![alt text](<Screenshot 2025-08-24 at 3.51.53 PM.png>)
+![alt text](screenshots/Receiver_points.png)
 
 ---
 
