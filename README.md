@@ -120,6 +120,7 @@ gnuplot plots/plot_3d.gp
 
 ### Google Earth
 Convert geodetic positions to KML:
+
 ```bash
 awk 'BEGIN{
   print "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
@@ -131,7 +132,8 @@ awk 'BEGIN{
 { printf "  %.8f,%.8f,0\n", $2, $1 }   # lon,lat,alt
 END{
   print "</coordinates></LineString></Placemark></Document></kml>";
-}' plots/receiver_track_geo.dat > plots/receiver_track.kml```
+}' plots/receiver_track_geo.dat > plots/receiver_track.kml'
+```
 
 Open `receiver_track.kml` saved in /plots in Google Earth to view the path.
 
