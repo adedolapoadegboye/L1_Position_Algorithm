@@ -145,11 +145,13 @@ Open `receiver_track.kml` saved in /plots in Google Earth to view the path.
 
 ---
 
-## 📖 Documentation
+## 📖 Documentations
 
 This project uses **Doxygen** for code documentation.
 
 The generated documentation is in the dir `docs/html/index.html`.
+
+![alt text](screenshots/Doxygen.png)
 
 ---
 
